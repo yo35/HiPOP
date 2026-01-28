@@ -18,25 +18,24 @@ set_property(TARGET hipoplib PROPERTY CXX_STANDARD 17)
 target_include_directories( hipoplib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
     $<INSTALL_INTERFACE:include>
-    /opt/homebrew/include
 )
 
-# Trouver OpenMP
+# Find OpenMP
 find_package(OpenMP REQUIRED)
 
-# Lier OpenMP
+# Link OpenMP
 target_link_libraries(hipoplib PUBLIC OpenMP::OpenMP_CXX)
 
-# Cas spécifique macOS : forcer les bons flags pour AppleClang
+# Specific case for macOS: force the correct flags for AppleClang
 if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
   message(STATUS "Configuring hipoplib for macOS with OpenMP")
 
-  # Nécessaire pour compiler avec OpenMP avec AppleClang
+  # Required to compile with OpenMP using AppleClang
   target_compile_options(hipoplib PRIVATE -Xpreprocessor -fopenmp)
 
-  # Lier explicitement la bibliothèque OpenMP
+  # Explicitly link the OpenMP library
   target_link_libraries(hipoplib PRIVATE omp)
 
-  # Spécifie où chercher libomp.dylib
+  # Specifies where to look for libomp.dylib
   target_link_directories(hipoplib PRIVATE /opt/homebrew/opt/libomp/lib)
 endif()
