@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+          - ubuntu-latest  # Arch: x64
+          - windows-latest # Arch: x64
+          - macos-latest   # Arch: arm64
 
     defaults:
       run:
