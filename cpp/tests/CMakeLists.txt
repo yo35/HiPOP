@@ -16,7 +16,7 @@ add_executable(CommonCxxTests ${CommonCxxTestsSrc})
 target_link_libraries(CommonCxxTests hipoplib)
 target_include_directories(CommonCxxTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Add all the ADD_TEST for each test
+# Register each test with CTest.
 foreach(test ${Tests})
     get_filename_component(TName ${test} NAME_WE)
     add_test(NAME ${TName} COMMAND CommonCxxTests ${TName})

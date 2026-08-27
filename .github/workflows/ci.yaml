@@ -21,7 +21,7 @@ jobs:
 
     defaults:
       run:
-        # Login shell so the conda environment set up below is active in every step
+        # Login shell so the conda environment set-up below is active in every step
         # (works on Windows too: setup-miniconda configures the bash profile).
         shell: bash -el {0}
 
@@ -32,11 +32,11 @@ jobs:
         with:
           environment-file: conda/env.yaml
           activate-environment: hipop-dev
-          miniforge-version: latest # Miniforge => conda-forge channel + libmamba solver
+          miniforge-version: latest # TODO miniforge or miniconda?
 
       - name: Configure
-        # `-G Ninja` forces a single-config build on every OS (without it Windows would
-        # use the Visual Studio multi-config generator).
+        # `-G Ninja` forces a single-config build on every OS
+        # (without it Windows would use the Visual Studio multi-config generator).
         run: cmake -S . -B build -G Ninja
 
       - name: Build

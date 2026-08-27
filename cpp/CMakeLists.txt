@@ -30,13 +30,10 @@ if(HIPOP_WITH_TESTS)
     add_subdirectory(tests)
 endif()
 
-
-# ---------------------------------
-
+# TODO impl build of examples
 
 
-
-# ------------- INSTALL -------------
+# ------------- INSTALL ------------- TODO replug install config
 
 #install(DIRECTORY include/
 #    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
