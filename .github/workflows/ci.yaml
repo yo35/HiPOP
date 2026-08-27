@@ -8,12 +8,21 @@ on:
 
 jobs:
   build-and-test:
-    name: Build & run tests
-    runs-on: ubuntu-latest # TODO: other OSes? (especially to test the Python wrapper)
+    name: Build & run tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+          - ubuntu-latest
+          - windows-latest
+          # TODO add macos-latest
 
     defaults:
       run:
-        # Login shell so the conda environment set up below is active in every step.
+        # Login shell so the conda environment set up below is active in every step
+        # (works on Windows too: setup-miniconda configures the bash profile).
         shell: bash -el {0}
 
     steps:
@@ -26,7 +35,9 @@ jobs:
           miniforge-version: latest # Miniforge => conda-forge channel + libmamba solver
 
       - name: Configure
-        run: cmake -S . -B build
+        # `-G Ninja` forces a single-config build on every OS (without it Windows would
+        # use the Visual Studio multi-config generator).
+        run: cmake -S . -B build -G Ninja
 
       - name: Build
         run: cmake --build build
