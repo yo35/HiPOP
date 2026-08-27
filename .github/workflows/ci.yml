@@ -1,0 +1,39 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ 'feature/**' ] # TODO remove feature/* once the workflow is stable
+  pull_request:
+    branches: [ main, 'feature/**' ] # TODO remove feature/* once the workflow is stable
+
+jobs:
+  build-and-test:
+    name: Build & run tests
+    runs-on: ubuntu-latest # TODO: other OSes? (especially to test the Python wrapper)
+
+    defaults:
+      run:
+        # Login shell so the conda environment set up below is active in every step.
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: conda/env.yaml
+          activate-environment: hipop-dev
+          miniforge-version: latest # Miniforge => conda-forge channel + libmamba solver
+
+      - name: Configure
+        # cxx-compiler (from the conda env) exports $CC/$CXX; CMAKE_PREFIX_PATH points
+        # find_package() (pybind11, OpenMP, Python) at the conda environment.
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build
+
+      # Runs every test registered with CTest: the C++ suite today, and the
+      # Python-wrapper tests once they are added under python/ with add_test().
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --no-tests=error
