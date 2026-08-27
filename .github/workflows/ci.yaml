@@ -26,14 +26,10 @@ jobs:
           miniforge-version: latest # Miniforge => conda-forge channel + libmamba solver
 
       - name: Configure
-        # cxx-compiler (from the conda env) exports $CC/$CXX; CMAKE_PREFIX_PATH points
-        # find_package() (pybind11, OpenMP, Python) at the conda environment.
         run: cmake -S . -B build
 
       - name: Build
         run: cmake --build build
 
-      # Runs every test registered with CTest: the C++ suite today, and the
-      # Python-wrapper tests once they are added under python/ with add_test().
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --no-tests=error
