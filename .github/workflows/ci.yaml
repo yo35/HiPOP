@@ -17,7 +17,7 @@ jobs:
         os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
           - ubuntu-latest
           - windows-latest
-          # TODO add macos-latest
+          - macos-latest
 
     defaults:
       run:
