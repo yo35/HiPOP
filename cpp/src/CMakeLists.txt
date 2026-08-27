@@ -1,3 +1,5 @@
+# TODO to remove (config achieved in parent dir)
+
 set(HIPOP_SRC
   create.cpp
   graph.cpp

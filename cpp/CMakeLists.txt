@@ -1,31 +1,34 @@
-cmake_minimum_required(VERSION 3.19)
-project(HiPOP VERSION 0.0.3)
-
-
-find_package(OpenMP REQUIRED)
-
-# ------------- SRC -------------
-
 set(HIPOP_HEADERS
-  include/hipop/create.h
-  include/hipop/graph.h
-  include/hipop/shortest_path.h
+    include/hipop/create.h
+    include/hipop/graph.h
+    include/hipop/shortest_path.h
 )
 
-add_subdirectory(src)
+set(HIPOP_SRC
+    src/create.cpp
+    src/graph.cpp
+    src/shortest_path.cpp
+)
 
-# -------------------------------
+add_library(hipoplib ${HIPOP_SRC})
+set_target_properties(hipoplib PROPERTIES
+    POSITION_INDEPENDENT_CODE ON # Needed to link the hipop static lib to the pybind dynamic one
+)
+
+target_include_directories(hipoplib PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(hipoplib PUBLIC OpenMP::OpenMP_CXX)
 
 
+# ---------------------------------
+# Tests and examples (optional)
 
-# ------------- TESTS -------------
-
-option(BUILD_TESTS "Build HiPOP tests" ON)
-if(BUILD_TESTS)
-  message(STATUS "Building Tests")
-  include(CTest)
-  add_subdirectory(tests)
-endif(BUILD_TESTS)
+if(HIPOP_WITH_TESTS)
+    message(STATUS "Building HiPOP tests (for core library)")
+    add_subdirectory(tests)
+endif()
 
 
 # ---------------------------------
@@ -35,38 +38,38 @@ endif(BUILD_TESTS)
 
 # ------------- INSTALL -------------
 
-install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "*_p.h" EXCLUDE
-)
-
-
-install(TARGETS hipoplib
-        EXPORT HipopTarget
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin COMPONENT RuntimeExecutables
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT RuntimeLibraries
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT Development
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/hipop
-)
-
-
-install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop)
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
-  VERSION ${HiPOP_VERSION}
-  COMPATIBILITY ExactVersion)
-
-configure_package_config_file(${HiPOP_SOURCE_DIR}/cmake/HipopConfig.cmake.in
-${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
-INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop)
-
-install(
-  FILES
-  ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
-  ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop
-  COMPONENT Development)
+#install(DIRECTORY include/
+#    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+#    FILES_MATCHING PATTERN "*.h"
+#    PATTERN "*_p.h" EXCLUDE
+#)
+#
+#
+#install(TARGETS hipoplib
+#        EXPORT HipopTarget
+#        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin COMPONENT RuntimeExecutables
+#        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT RuntimeLibraries
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT Development
+#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/hipop
+#)
+#
+#
+#install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop)
+#
+#include(CMakePackageConfigHelpers)
+#write_basic_package_version_file(${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
+#  VERSION ${HiPOP_VERSION}
+#  COMPATIBILITY ExactVersion)
+#
+#configure_package_config_file(${HiPOP_SOURCE_DIR}/cmake/HipopConfig.cmake.in
+#${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
+#INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop)
+#
+#install(
+#  FILES
+#  ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
+#  ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
+#  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop
+#  COMPONENT Development)
 
 # --------------------------------
