@@ -19,25 +19,34 @@ jobs:
           - windows-latest # Arch: x64
           - macos-latest   # Arch: arm64
 
-    defaults:
-      run:
-        # Login shell so the conda environment set-up below is active in every step
-        # (works on Windows too: setup-miniconda configures the bash profile).
-        shell: bash -el {0}
-
     steps:
       - uses: actions/checkout@v7
 
-      - uses: conda-incubator/setup-miniconda@v4
+      - uses: actions/setup-python@v7
+        id: setup-python
         with:
-          environment-file: conda/env.yaml
-          activate-environment: hipop-dev
-          miniforge-version: latest # TODO miniforge or miniconda?
+          python-version: '3.10'
+
+      - name: Install pybind11
+        run: pip install pybind11
+
+      - name: Install OpenMP (macOS only)
+        if: runner.os == 'macOS'
+        run: brew install libomp # AppleClang has no OpenMP by default.
 
       - name: Configure
-        # `-G Ninja` forces a single-config build on every OS
-        # (without it Windows would use the Visual Studio multi-config generator).
-        run: cmake -S . -B build -G Ninja
+        shell: bash # Use Bash (will be Git Bash on Windows) for the array + conditional below.
+        run: |
+          args=(
+            -S . -B build -G Ninja
+            -D CMAKE_BUILD_TYPE=Release
+            -D Python_EXECUTABLE='${{ steps.setup-python.outputs.python-path }}'
+            -D pybind11_DIR="$(python -m pybind11 --cmakedir)"
+          )
+          if [ "$RUNNER_OS" = macOS ]; then
+            args+=(-D OpenMP_ROOT="$(brew --prefix libomp)")
+          fi
+          cmake "${args[@]}"
 
       - name: Build
         run: cmake --build build
