@@ -36,9 +36,12 @@ endif()
 # ---------------------------------
 # Install (core library only)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 install(
-    DIRECTORY include
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    DIRECTORY include/ # Trailing slash means "copy the content of this directory", do not remove it!
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
     PATTERN "*_p.h" EXCLUDE
 )
@@ -46,15 +49,12 @@ install(
 install(
     TARGETS hipoplib
     EXPORT HipopTarget
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin COMPONENT RuntimeExecutables
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT RuntimeLibraries
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib COMPONENT Development
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/hipop
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT RuntimeExecutables
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT RuntimeLibraries
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
 )
 
-install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop)
-
-include(CMakePackageConfigHelpers)
+install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop)
 
 write_basic_package_version_file(
     ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
@@ -65,13 +65,13 @@ write_basic_package_version_file(
 configure_package_config_file(
     cmake/HipopConfig.cmake.in
     ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
 )
 
 install(
     FILES
         ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
         ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/hipop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
     COMPONENT Development
 )
