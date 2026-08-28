@@ -9,3 +9,11 @@ build-backend = "scikit_build_core.build"
 name = "HiPOP"
 version = "1.0.0"
 # TODO set metadata
+
+[tool.scikit-build]
+wheel.packages = ["python/hipop"] # Location of the pure Python package to include in the wheel...
+wheel.exclude = ["**/*.cpp"]      # ... but the C++ sources of the wrapper must be excluded.
+
+[tool.scikit-build.cmake.define]
+HIPOP_WITH_TESTS = "OFF"
+HIPOP_WITH_EXAMPLES = "OFF"

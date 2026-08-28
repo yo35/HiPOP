@@ -36,42 +36,49 @@ endif()
 # ---------------------------------
 # Install (core library only)
 
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
+# Disable deployment of the core library artifacts when building the Python wheel
+# for the wrapper: the core library is statically linked into the .so/.dll file implementing
+# the Python extension, thus they don't need to be included in the wheel.
+if(NOT DEFINED SKBUILD)
 
-install(
-    DIRECTORY include/ # Trailing slash means "copy the content of this directory", do not remove it!
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "*_p.h" EXCLUDE
-)
+    include(CMakePackageConfigHelpers)
+    include(GNUInstallDirs)
 
-install(
-    TARGETS hipoplib
-    EXPORT HipopTarget
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT RuntimeExecutables
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT RuntimeLibraries
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-)
+    install(
+        DIRECTORY include/ # Trailing slash means "copy the content of this directory", do not remove it!
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+        PATTERN "*_p.h" EXCLUDE
+    )
 
-install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop)
+    install(
+        TARGETS hipoplib
+        EXPORT HipopTarget
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT RuntimeExecutables
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT RuntimeLibraries
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    )
 
-write_basic_package_version_file(
-    ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
-    VERSION ${HiPOP_VERSION}
-    COMPATIBILITY ExactVersion
-)
+    install(EXPORT HipopTarget DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop)
 
-configure_package_config_file(
-    cmake/HipopConfig.cmake.in
-    ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
-)
-
-install(
-    FILES
-        ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
+    write_basic_package_version_file(
         ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
-    COMPONENT Development
-)
+        VERSION ${HiPOP_VERSION}
+        COMPATIBILITY ExactVersion
+    )
+
+    configure_package_config_file(
+        cmake/HipopConfig.cmake.in
+        ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
+    )
+
+    install(
+        FILES
+            ${CMAKE_BINARY_DIR}/Hipop/HipopConfig.cmake
+            ${CMAKE_BINARY_DIR}/Hipop/HipopConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hipop
+        COMPONENT Development
+    )
+
+endif()
