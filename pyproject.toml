@@ -63,7 +63,15 @@ test-command = "pytest {project}"
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.macos]
-# AppleClang has no bundled OpenMP: install libomp and point CMake at it via OpenMP_ROOT.
-# `delocate` then vendors libomp.dylib into the wheel.
 before-all = "brew install libomp"
-environment = { OpenMP_ROOT = "$(brew --prefix libomp)", MACOSX_DEPLOYMENT_TARGET = "10.15" }
+environment = {
+    OpenMP_ROOT = "$(brew --prefix libomp)",
+
+    # Oldest MacOS version supported by the generated wheels.
+    # The version of the MacOS runner must be chosen accordingly.
+    #
+    # FIXME The availability of runners with "old" MacOS version on GitHub is not ensured,
+    # which limits the backward compatibility of the wheels produced with the current configuration.
+    #
+    MACOSX_DEPLOYMENT_TARGET = "14",
+}
