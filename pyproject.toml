@@ -15,18 +15,18 @@ Issues = "https://github.com/EMob-Lab/HiPOP/issues"
 
 [dependency-groups]
 build = [ # Must be maintained identical to "build-system".requires
-    "scikit-build-core",
-    "pybind11",
+    "scikit-build-core >= 1.0",
+    "pybind11", # TODO pybind11 version requirements?
 ]
 dev = [
     { include-group = "build" },
-    "pytest ~= 9.0",
+    "pytest >= 9.0",
 ]
 
 [build-system]
 requires = [ # Must be maintained identical to "dependency-groups".build
-    "scikit-build-core",
-    "pybind11",
+    "scikit-build-core >= 1.0",
+    "pybind11", # TODO pybind11 version requirements?
 ]
 build-backend = "scikit_build_core.build"
 
