@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.19)
 
-project(HiPOP VERSION 0.0.3) # TODO project name/version set from top-level
+project(HiPOP
+    VERSION 0.0.3 # TODO synchronize version number with pyproject.toml
+    DESCRIPTION "High Performance Optimal Path module"
+    HOMEPAGE_URL "https://github.com/EMob-Lab/HiPOP"
+    LANGUAGES CXX
+)
 
 option(HIPOP_WITH_PYTHON "Compile Python wrapper" OFF) # Disabled by default, so that pybind11 is not required then.
 option(HIPOP_WITH_TESTS "Compile HiPOP tests (for core library)" ON)
