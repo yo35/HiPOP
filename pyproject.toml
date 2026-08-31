@@ -51,10 +51,8 @@ build = [ # Build Linux + Win for x64, and MacOS for ARM64. TODO is it enough?
     "*-win_amd64",
     "*-macosx_arm64",
 ]
-skip = [ # Exclude non-standard Python interpreters and free-threaded versions of the standard interpreter.
+skip = [
     "cp3??t-*", # Free-threaded standard interpreter (https://docs.python.org/3/glossary.html#term-free-threading).
-    "pp*",      # PyPy interpreter (https://pypy.org/).
-    "gp*",      # GraalPy interpreter (https://graalpy.org/).
 ]
 test-requires = [ # Must be maintained identical to "dependency-groups".test
     "pytest >= 9.0",
