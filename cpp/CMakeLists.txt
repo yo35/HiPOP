@@ -39,9 +39,9 @@ endif()
 # ---------------------------------
 # Install (core library only)
 
-# Disable deployment of the core library artifacts when building the Python wheel
-# for the wrapper: the core library is statically linked into the .so/.dll file implementing
-# the Python extension, thus they don't need to be included in the wheel.
+# Disable deployment of the core library artifacts when building the Python wheel for the wrapper:
+# the core library is statically linked into the .so/.dylib/.dll file implementing the Python extension,
+# thus they don't need to be included in the wheel.
 if(NOT DEFINED SKBUILD)
 
     include(CMakePackageConfigHelpers)
