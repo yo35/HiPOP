@@ -53,3 +53,14 @@ jobs:
 
       - name: C++ core library - Run tests
         run: ctest --test-dir build-cpponly --output-on-failure --no-tests=error
+
+      - name: Python wrapper - Build & install
+        shell: bash # Use Bash (will be Git Bash on Windows) for the conditional below.
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            export CMAKE_ARGS="-DOpenMP_ROOT=$(brew --prefix libomp)"
+          fi
+          pip install --group dev .
+
+      - name: Python wrapper - Run tests
+        run: pytest
