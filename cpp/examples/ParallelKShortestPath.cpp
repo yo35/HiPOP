@@ -1,6 +1,14 @@
 #include <hipop/graph.h>
 #include <hipop/shortest_path.h>
 
+#include <cstdlib>
+#include <iostream>
+#include <limits>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+
 int main()
 {
     hipop::OrientedGraph G;
@@ -15,14 +23,14 @@ int main()
     G.AddLink("0_1", "0", "1", 100, {{"PersonalVehicle", {{"travel_time", 10}}}}, "CAR");
     G.AddLink("1_2", "1", "2", 100, {{"PersonalVehicle", {{"travel_time", 20}}}}, "CAR");
     G.AddLink("2_3", "2", "3", 100, {{"PersonalVehicle", {{"travel_time", 10}}}}, "CAR");
-    
+
 
     std::vector<std::string> origins = {"0"};
     std::vector<std::string> destinations = {"3"};
     //std::vector<int> kPtahs = {4, 4, 4, 4}
     std::vector<std::unordered_map<std::string, std:: string> > vecMapLabelCosts = {
         {{"CAR", "PersonalVehicle"}},
-        
+
     };
 
     G.ShowNodes();
