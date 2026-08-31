@@ -31,22 +31,15 @@ jobs:
 
       - name: Install OpenMP (macOS only)
         if: runner.os == 'macOS'
-        run: brew install libomp # AppleClang has no OpenMP by default.
+        # AppleClang has no OpenMP by default, thus it must be installed separately.
+        # The environment variable OpenMP_ROOT is then exported for subsequent steps
+        # (CMake uses this variable as a search hint).
+        run: |
+          brew install libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: C++ core library - Configure
-        shell: bash # Use Bash (will be Git Bash on Windows) for the array + conditional below.
-        run: |
-          args=(
-            -S . -B build-cpponly -G Ninja
-            -D CMAKE_BUILD_TYPE=Release
-            -D HIPOP_WITH_PYTHON=OFF
-            -D HIPOP_WITH_TESTS=ON
-            -D HIPOP_WITH_EXAMPLES=ON
-          )
-          if [ "$RUNNER_OS" = macOS ]; then
-            args+=(-D OpenMP_ROOT="$(brew --prefix libomp)")
-          fi
-          cmake "${args[@]}"
+        run: cmake -S . -B build-cpponly -G Ninja
 
       - name: C++ core library - Build
         run: cmake --build build-cpponly
@@ -55,12 +48,7 @@ jobs:
         run: ctest --test-dir build-cpponly --output-on-failure --no-tests=error
 
       - name: Python wrapper - Build & install
-        shell: bash # Use Bash (will be Git Bash on Windows) for the conditional below.
-        run: |
-          if [ "$RUNNER_OS" = macOS ]; then
-            export CMAKE_ARGS="-DOpenMP_ROOT=$(brew --prefix libomp)"
-          fi
-          pip install --group dev .
+        run: pip install --group dev .
 
       - name: Python wrapper - Run tests
         run: pytest
