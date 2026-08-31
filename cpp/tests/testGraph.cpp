@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-// Same test scenario as in python/tests/testGraph.py.
+// Same test scenario as in python/tests/test_Graph.py.
 // WARNING: any modification in this test should be reflected in the python test as well.
 int testGraph(int argc, char *argv[])
 {
