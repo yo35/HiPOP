@@ -13,6 +13,7 @@ editable.rebuild = true
 
 
 [tool.scikit-build.cmake.define]
+HIPOP_WITH_PYTHON = "ON"
 HIPOP_WITH_TESTS = "OFF"
 HIPOP_WITH_EXAMPLES = "OFF"
 
