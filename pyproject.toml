@@ -25,7 +25,7 @@ build = [ # Must be maintained identical to "build-system".requires
 ]
 dev = [
     { include-group = "build" },
-    "pytest",
+    "pytest ~= 9.0",
 ]
 
 
