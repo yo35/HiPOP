@@ -30,7 +30,10 @@ if(HIPOP_WITH_TESTS)
     add_subdirectory(tests)
 endif()
 
-# TODO impl build of examples
+if(HIPOP_WITH_EXAMPLES)
+    message(STATUS "Building HiPOP examples (for core library)")
+    add_subdirectory(examples)
+endif()
 
 
 # ---------------------------------
