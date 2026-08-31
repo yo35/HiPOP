@@ -2,9 +2,11 @@ name: Build & Test
 
 on:
   push:
-    branches: [ 'feature/**' ] # TODO remove feature/* once the workflow is stable
+    branches:
+      - 'feature/**' # TODO remove feature/* once the workflow is stable
   pull_request:
-    branches: [ main, 'feature/**' ] # TODO remove feature/* once the workflow is stable
+    branches:
+      - main
 
 jobs:
   build-and-test:
@@ -27,29 +29,27 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install pybind11
-        run: pip install pybind11
-
       - name: Install OpenMP (macOS only)
         if: runner.os == 'macOS'
         run: brew install libomp # AppleClang has no OpenMP by default.
 
-      - name: Configure
+      - name: C++ core library - Configure
         shell: bash # Use Bash (will be Git Bash on Windows) for the array + conditional below.
         run: |
           args=(
-            -S . -B build -G Ninja
+            -S . -B build-cpponly -G Ninja
             -D CMAKE_BUILD_TYPE=Release
-            -D Python_EXECUTABLE='${{ steps.setup-python.outputs.python-path }}'
-            -D pybind11_DIR="$(python -m pybind11 --cmakedir)"
+            -D HIPOP_WITH_PYTHON=OFF
+            -D HIPOP_WITH_TESTS=ON
+            -D HIPOP_WITH_EXAMPLES=ON
           )
           if [ "$RUNNER_OS" = macOS ]; then
             args+=(-D OpenMP_ROOT="$(brew --prefix libomp)")
           fi
           cmake "${args[@]}"
 
-      - name: Build
-        run: cmake --build build
+      - name: C++ core library - Build
+        run: cmake --build build-cpponly
 
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure --no-tests=error
+      - name: C++ core library - Run tests
+        run: ctest --test-dir build-cpponly --output-on-failure --no-tests=error
