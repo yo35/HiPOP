@@ -67,7 +67,3 @@ manylinux-x86_64-image = "manylinux_2_28"
 # `delocate` then vendors libomp.dylib into the wheel.
 before-all = "brew install libomp"
 environment = { OpenMP_ROOT = "$(brew --prefix libomp)", MACOSX_DEPLOYMENT_TARGET = "10.15" }
-
-[tool.cibuildwheel.windows]
-# Force-bundle the MSVC OpenMP runtime (vcomp140.dll) so the wheel is self-contained.
-repair-wheel-command = "delvewheel repair --add-dll vcomp140.dll -w {dest_dir} {wheel}"
