@@ -1,19 +1,36 @@
-[build-system]
-requires = [
-    "scikit-build-core",
-    "pybind11",
-]
-build-backend = "scikit_build_core.build"
-
 [project]
 name = "HiPOP"
 version = "1.0.0"
 # TODO set metadata
 
+
 [tool.scikit-build]
 wheel.packages = ["python/hipop"] # Location of the pure Python package to include in the wheel...
 wheel.exclude = ["**/*.cpp"]      # ... but the C++ sources of the wrapper must be excluded.
+build-dir = "build-scikit"
+editable.verbose = true
+editable.rebuild = true
+
 
 [tool.scikit-build.cmake.define]
 HIPOP_WITH_TESTS = "OFF"
 HIPOP_WITH_EXAMPLES = "OFF"
+
+
+["dependency-groups"]
+build = [ # Must be maintained identical to "build-system".requires
+    "scikit-build-core",
+    "pybind11",
+]
+dev = [
+    { include-group = "build" },
+    "pytest",
+]
+
+
+[build-system]
+requires = [ # Must be maintained identical to "dependency-groups".build
+    "scikit-build-core",
+    "pybind11",
+]
+build-backend = "scikit_build_core.build"
