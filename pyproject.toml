@@ -38,10 +38,10 @@ Issues = "https://github.com/EMob-Lab/HiPOP/issues"
 [dependency-groups]
 build = [ # Dependencies needed for build tasks. Must be maintained identical to "build-system".requires
     "scikit-build-core >= 1.0",
-    "pybind11", # TODO pybind11 version requirements?
+    "pybind11 >= 3.1",
 ]
 test = [ # Dependencies needed for test tasks. Must be maintained identical to tool.cibuildwheel."test-requires"
-    "pytest >= 9.0",
+    "pytest >= 9.1",
 ]
 dev = [ # All dependencies needed for development tasks.
     { include-group = "build" },
@@ -55,7 +55,7 @@ distrib = [ # Dependencies needed to build distribution files (wheels & source d
 [build-system]
 requires = [ # Must be maintained identical to "dependency-groups".build
     "scikit-build-core >= 1.0",
-    "pybind11", # TODO pybind11 version requirements?
+    "pybind11 >= 3.1",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -81,7 +81,7 @@ skip = [
     "cp3??t-*", # Free-threaded standard interpreter (https://docs.python.org/3/glossary.html#term-free-threading).
 ]
 test-requires = [ # Must be maintained identical to "dependency-groups".test
-    "pytest >= 9.0",
+    "pytest >= 9.1",
 ]
 test-command = "pytest {project}"
 
