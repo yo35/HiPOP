@@ -1,6 +1,6 @@
 [project]
 name = "scisoftdev-tmp-HiPOP" # TODO Project name (and VERSION !!) modified to test deployment, to restore.
-dynamic = ["version"]
+dynamic = ["version"] # Version number is defined in file VERSION.txt.
 description = "High Performance Optimal Path module"
 readme = "README.md"
 requires-python = ">= 3.10"
