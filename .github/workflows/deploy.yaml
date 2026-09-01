@@ -69,8 +69,8 @@ jobs:
     # TODO keep? if: github.event_name == 'release'
 
     environment:
-      name: testpypi-env # TODO fix name
-      url: https://test.pypi.org/p/scisoftdev-tmp-HiPOP # TODO fix URL
+      name: pypi-env
+      url: https://pypi.org/project/scisoftdev-tmp-HiPOP # TODO fix project name in URL
 
     permissions:
       id-token: write # Required for authentication through OIDC.
@@ -87,5 +87,3 @@ jobs:
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/ # TODO remove to use the default PyPI repository
