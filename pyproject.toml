@@ -1,14 +1,35 @@
 [project]
 name = "scisoftdev-tmp-HiPOP" # TODO Project name modified to test deployment, to restore.
-version = "1.0.3" # TODO Project version modified to test deployment, to restore.
+version = "1.0.4" # TODO Project version modified to test deployment, to restore.
 description = "High Performance Optimal Path module"
 readme = "README.md"
 requires-python = ">= 3.10"
 license = "LGPL-3.0-only"
 license-files = ["LICENSE"]
 # TODO authors/maintainers
-# TODO keywords
-# TODO classifiers
+keywords = [
+    "graph",
+    "graph-theory",
+    "shortest-path",
+    "dijkstra",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
 
 [project.urls]
 Repository = "https://github.com/EMob-Lab/HiPOP"
