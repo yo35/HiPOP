@@ -17,8 +17,8 @@ jobs:
       matrix:
         os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
           - ubuntu-latest  # Arch: x64
-          - windows-latest # Arch: x64
-          - macos-14       # Arch: arm64
+          # TODO re-enable - windows-latest # Arch: x64
+          # TODO re-enable - macos-14       # Arch: arm64
           # Do not use the latest macOS runner to ensure backward compatibility.
           # See comment on MACOSX_DEPLOYMENT_TARGET in pyproject.toml for more details.
 
