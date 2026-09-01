@@ -14,7 +14,6 @@ set(Tests
 create_test_sourcelist(CommonCxxTestsSrc CommonCxxTests.cpp ${Tests})
 add_executable(CommonCxxTests ${CommonCxxTestsSrc})
 target_link_libraries(CommonCxxTests hipoplib)
-target_include_directories(CommonCxxTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Register each test with CTest.
 foreach(test ${Tests})
