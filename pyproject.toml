@@ -61,7 +61,10 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 wheel.packages = ["python/hipop"] # Location of the pure Python package to include in the wheel...
-wheel.exclude = ["**/*.cpp"]      # ... but the C++ sources of the wrapper must be excluded.
+wheel.exclude = [
+    "**/*.cpp",                   # ... but the C++ sources of the wrapper must be excluded...
+    "**/*.py.template",           # ... and so are the templates of the dynamically-generated Python files.
+]
 build-dir = "build-scikit"
 editable.verbose = true
 editable.rebuild = true
@@ -70,6 +73,10 @@ editable.rebuild = true
 HIPOP_WITH_PYTHON = "ON"
 HIPOP_WITH_TESTS = "OFF"
 HIPOP_WITH_EXAMPLES = "OFF"
+
+[[tool.scikit-build.generate]]
+path = "hipop/__init__.py"
+template-path = "python/hipop/__init__.py.template"
 
 [tool.cibuildwheel]
 build = [ # Build Linux + Win for x64, and MacOS for ARM64. TODO is it enough?
