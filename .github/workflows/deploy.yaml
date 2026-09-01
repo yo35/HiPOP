@@ -79,9 +79,5 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Debug # TODO to remove
-        run: |
-          ls -al dist
-
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
