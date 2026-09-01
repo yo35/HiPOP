@@ -1,6 +1,6 @@
 [project]
-name = "scisoftdev-tmp-HiPOP" # TODO Project name modified to test deployment, to restore.
-version = "1.0.4" # TODO Project version modified to test deployment, to restore.
+name = "scisoftdev-tmp-HiPOP" # TODO Project name (and VERSION !!) modified to test deployment, to restore.
+dynamic = ["version"]
 description = "High Performance Optimal Path module"
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -37,8 +37,9 @@ Issues = "https://github.com/EMob-Lab/HiPOP/issues"
 
 [dependency-groups]
 build = [ # Dependencies needed for build tasks. Must be maintained identical to "build-system".requires
-    "scikit-build-core >= 1.0",
+    "dynamic-metadata >= 0.5",
     "pybind11 >= 3.1",
+    "scikit-build-core >= 1.0",
 ]
 test = [ # Dependencies needed for test tasks. Must be maintained identical to tool.cibuildwheel."test-requires"
     "pytest >= 9.1",
@@ -54,10 +55,16 @@ distrib = [ # Dependencies needed to build distribution files (wheels & source d
 
 [build-system]
 requires = [ # Must be maintained identical to "dependency-groups".build
-    "scikit-build-core >= 1.0",
+    "dynamic-metadata >= 0.5",
     "pybind11 >= 3.1",
+    "scikit-build-core >= 1.0",
 ]
 build-backend = "scikit_build_core.build"
+
+[[tool.dynamic-metadata]]
+provider = "dynamic_metadata.from_file"
+field = "version"
+path = "VERSION.txt"
 
 [tool.scikit-build]
 wheel.packages = ["python/hipop"] # Location of the pure Python package to include in the wheel...

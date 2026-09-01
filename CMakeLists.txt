@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 
+file(STRINGS VERSION.txt HIPOP_VERSION)
 project(HiPOP
-    VERSION 0.0.3 # TODO synchronize version number with pyproject.toml
+    VERSION "${HIPOP_VERSION}"
     DESCRIPTION "High Performance Optimal Path module"
     HOMEPAGE_URL "https://github.com/EMob-Lab/HiPOP"
     LANGUAGES CXX
