@@ -2,7 +2,9 @@ name: Deploy to PyPI
 
 on:
   push:
-    workflow_dispatch: # TODO define the trigger with EMobLab once the workflow is stable
+    tags:
+      - 'v*.*.*' # Trigger on version tags like v1.2.3
+  # TODO define the trigger with EMobLab once the workflow is stable
 
 jobs:
 
