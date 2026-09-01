@@ -2,9 +2,7 @@ name: Deploy to PyPI
 
 on:
   push:
-    branches:
-      - 'feature/**' # TODO remove feature/* once the workflow is stable
-  # TODO define the trigger with EMobLab once the workflow is stable
+    workflow_dispatch: # TODO define the trigger with EMobLab once the workflow is stable
 
 jobs:
 
@@ -17,8 +15,8 @@ jobs:
       matrix:
         os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
           - ubuntu-latest  # Arch: x64
-          # TODO re-enable - windows-latest # Arch: x64
-          # TODO re-enable - macos-14       # Arch: arm64
+          - windows-latest # Arch: x64
+          - macos-14       # Arch: arm64
           # Do not use the latest macOS runner to ensure backward compatibility.
           # See comment on MACOSX_DEPLOYMENT_TARGET in pyproject.toml for more details.
 

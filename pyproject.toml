@@ -1,6 +1,6 @@
 [project]
 name = "scisoftdev-tmp-HiPOP" # TODO Project name modified to test deployment, to restore.
-version = "1.0.2" # TODO Project version modified to test deployment, to restore.
+version = "1.0.3" # TODO Project version modified to test deployment, to restore.
 description = "High Performance Optimal Path module"
 readme = "README.md"
 requires-python = ">= 3.10"
