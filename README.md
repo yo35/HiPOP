@@ -90,42 +90,23 @@ Remarks:
   (cf. previous remark).
 
 
-### C++ only
+### Install the C++ core library only (from local build)
 
-Inside your conda environment go to the cpp folder, and install the code using cmake:
+This installation procedure allows you to build locally and install only the HiPOP C++ core library.
+The Python wrapper is neither built nor installed here.
+This procedure is intended for advanced users.
 
+For this procedure, same requirements as mentionned in the previous section
+in terms of C++/OpenMP/CMake components.
+However, you don't need to have Python installed on your system.
+
+Then, from the root directory of the HiPOP sources:
 ```shell
-cd cpp
 mkdir build
 cd build
-cmake .. -DCMAKE_PREFIX_PATH=<PREFIX>\
-         -DCMAKE_INSTALL_PREFIX=<PREFIX>\
-         -DCMAKE_BUILD_TYPE=Release\
-         -DBUILD_TESTS=ON
-cmake --build . --target install --config Release
+cmake .. -DCMAKE_INSTALL_PREFIX=<install-directory>
+make
+make test    # Optionally, to run the tests
+make install
 ```
-Where `<PREFIX>` is the path to your prefix.
-
-If you used conda to install the dependencies, replace it by `$CONDA_PREFIX`.
-
-If you used venv to install the dependencies, replace it by the path to your venv.
-
-You can then lauch the tests in the `build` directory:
-
-```shell
-ctest --output-on-failure
-```
-
-
-### Python
-
-To install C++ code use the script `install_cpp.py`:
-
-```shell
-python python/install_cpp.py
-```
-
-Then install the python lib:
-```shell
-python -m pip install python/
-```
+... where `<install-directory>` is the path the location where you want to install HiPOP.
