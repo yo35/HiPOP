@@ -38,22 +38,20 @@ This method requires the following components to be available on your system:
 
 Then, here is the local build install procedure:
 
-1. Download the latest HiPOP source from https://github.com/EMob-Lab/HiPOP/archive/refs/heads/main.zip
-or by cloning the git repository:
-
-```shell
-git clone https://github.com/EMob-Lab/HiPOP.git
-```
+1. Download the latest HiPOP sources from https://github.com/EMob-Lab/HiPOP/archive/refs/heads/main.zip
+   or by cloning the git repository:
+   ```shell
+   git clone https://github.com/EMob-Lab/HiPOP.git
+   ```
 
 2. From the root directory of the HiPOP sources:
+   ```shell
+   pip install .
 
-```shell
-pip install .
-
-# Optionally, to run the tests:
-pip install --group dev
-pytest
-```
+   # Optionally, to run the tests:
+   pip install --group dev
+   pytest
+   ```
 
 Remarks:
 
@@ -68,8 +66,8 @@ Remarks:
 - TODO: editable installs
 
 - If you don't have the prerequisite C++/OpenMP/CMake components available on you system,
-  but you have [Conda](https://docs.conda.io/) available, a Conda environment is provided
-  with these components. Install and activate it with:
+  but you have [Conda](https://docs.conda.io/) available, a Conda environment with these components
+  is provided with the HiPOP sources. Install and activate it with:
   ```shell
   conda create -f conda/env.yaml
   conda activate hipop-dev
@@ -83,7 +81,8 @@ Remarks:
   brew install libomp
   OpenMP_ROOT=$(brew --prefix libomp)
   ```
-  Alternatively, you may also use the Conda environment (cf. the previous remark).
+  Alternatively, you may also use the Conda environment provided with the HiPOP sources
+  (cf. previous remark).
 
 
 ### C++ only
