@@ -1,4 +1,5 @@
 import functools
+import logging
 import time
 
 from hipop.cpp.shortest_path import (
@@ -16,6 +17,8 @@ from hipop.cpp.shortest_path import (
     compute_path_cost,
     compute_paths_costs,
 )
+
+log = logging.getLogger(__name__)
 
 _EXPORTED_FUNCTIONS = (
     "dijkstra",
@@ -63,6 +66,6 @@ def report_hipop_call_stats():
     for name, stats in _stats.items():
         if stats["calls"] > 0:
             at_least_one_call = True
-            print(f"HiPOP fun {name:<40}:    #calls = {stats['calls']:>7},    run time = {stats['total_time']:>12.6f}")
+            log.info(f"HiPOP function {name}: {stats['calls']} call(s), {stats['total_time']:.6f}s total")
     if not at_least_one_call:
-        print("No HiPOP functions were called.")
+        log.info("No HiPOP functions were called.")
