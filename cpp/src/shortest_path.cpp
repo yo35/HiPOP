@@ -381,10 +381,12 @@ namespace hipop
         std::vector<std::string> origins, 
         std::vector<std::string> destinations,
         std::vector<std::unordered_map<std::string, std::string> > vecMapLabelCosts,
-        std::string cost,
-        int,
+        std::string cost, 
+        int threadNumber, 
         std::vector<setstring> vecAvailableLabels)
     {
+        omp_set_num_threads(threadNumber);
+
         int nbPath = origins.size();
         std::vector<int> emptyV;
         std::vector<int> uniqueIndices;
@@ -434,9 +436,11 @@ namespace hipop
         std::vector<std::string> origins,
         std::vector<std::unordered_map<std::string, std::string> > vecMapLabelCosts,
         std::string cost,
-        int,
+        int threadNumber,
         std::vector<setstring> vecAvailableLabels)
     {
+        omp_set_num_threads(threadNumber);
+
         int nbSPTs = origins.size();
         std::vector<ShortestPathsTree> res(nbSPTs);
 
@@ -474,9 +478,11 @@ namespace hipop
         std::vector<std::string> destinations,
         std::vector<std::unordered_map<std::string, std::string> > vecMapLabelCosts,
         std::vector<std::string> costs,
-        int,
+        int threadNumber,
         std::vector<setstring> vecAvailableLabels)
     {
+        omp_set_num_threads(threadNumber);
+
         std::vector<int> emptyV;
         std::vector<int> uniqueIndices;
         std::unordered_map<int, int> duplicateIndices;
@@ -698,8 +704,9 @@ namespace hipop
         const std::vector<std::vector<std::vector<std::string>>> &paths,
         const std::string &cost,
         const std::unordered_map<std::string, std::string> mapLabelCost,
-        int)
+        int threadNumber)
     {
+        omp_set_num_threads(threadNumber);
         int nbBatches = paths.size();
 
         std::vector<std::vector<double>> res(nbBatches);
@@ -1099,8 +1106,10 @@ namespace hipop
         double costMultiplier,
         int maxRetry,
         const std::vector<int> &kPaths,
-        int)
+        int threadNumber)
     {
+        omp_set_num_threads(threadNumber);
+
         int nbODs = origins.size();
         std::vector<std::vector<pathCost>> res(nbODs);
         OrientedGraph *privateG;
@@ -1308,7 +1317,7 @@ namespace hipop
         std::vector<std::string> destinations,
         std::vector<std::unordered_map<std::string, std::string> > vecMapLabelCosts,
         std::string cost,
-        int,
+        int threadNumber,
         std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> pairMandatoryLabels,
         double maxDiffCost,
         double maxDistInCommon,
@@ -1438,6 +1447,8 @@ namespace hipop
         }
 
         // Launch dijkstra algo for each OD in parallel
+        omp_set_num_threads(threadNumber);
+
         int nbOD = origins.size();
         std::vector<std::vector<pathCost>> res(nbOD);
 
