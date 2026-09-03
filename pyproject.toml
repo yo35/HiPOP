@@ -54,6 +54,10 @@ distrib = [ # Dependencies needed to build distribution files (wheels & source d
     "cibuildwheel >= 4.2",
 ]
 
+
+# ------------------------------------------------------------------------------
+# Configuration of the build
+
 [build-system]
 requires = [ # Must be kept identical to "dependency-groups".build
     "dynamic-metadata >= 0.5",
@@ -86,8 +90,12 @@ HIPOP_WITH_EXAMPLES = "OFF"
 path = "hipop/__init__.py"
 template-path = "python/hipop/__init__.py.template"
 
+
+# ------------------------------------------------------------------------------
+# Configuration of distribution file generation wheels & source distributions)
+
 [tool.cibuildwheel]
-build = [ # Build Linux + Win for x64, and MacOS for ARM64. TODO is it enough?
+build = [
     "*-manylinux_x86_64",
     "*-win_amd64",
     "*-macosx_arm64",

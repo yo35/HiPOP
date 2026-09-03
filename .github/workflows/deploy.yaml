@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*.*.*' # Trigger on version tags like v1.2.3
-  # TODO define the trigger with EMobLab once the workflow is stable
 
 jobs:
 
@@ -88,7 +87,6 @@ jobs:
       - check-version
       - build-wheels
       - build-sdist
-    # TODO keep? if: github.event_name == 'release'
 
     environment:
       name: pypi-env
