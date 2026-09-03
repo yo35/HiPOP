@@ -3,10 +3,15 @@
 High Performance Optimal Path module
 
 
-## Install Hipop
+## Description
 
 HiPOP is the C++ graph library used by [MnMS](https://github.com/EMob-Lab/MnMS.git).
+It is composed of:
+- a C++ core library implementing a graph data-structure and several shortest path search algorithms,
+- a Python wrapper exposing the C++ classes and functions to the Python world.
 
+
+## Install Hipop
 
 ### Install prebuilt distribution
 
