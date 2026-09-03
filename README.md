@@ -57,33 +57,33 @@ pytest
 
 Remarks:
 
-1. The `--group` option requires pip ≥ 25.1. If you have an older version,
-the install command above will fail with an error message such as `no such option: --group`.
-In this case, try to upgrade pip beforehand with:
-```shell
-pip install --upgrade pip
-```
-Alternatively, install the test runner `pytest` manually (or skip the optional test running step).
+- The `--group` option requires pip ≥ 25.1. If you have an older version,
+  the install command above will fail with an error message such as `no such option: --group`.
+  In this case, try to upgrade pip beforehand with:
+  ```shell
+  pip install --upgrade pip
+  ```
+  Alternatively, install the test runner `pytest` manually (or skip the optional test running step).
 
-2. TODO: editable installs
+- TODO: editable installs
 
-3. If you don't have the prerequisite C++/OpenMP/CMake components available on you system,
-but you have [Conda](https://docs.conda.io/) available, a Conda environment is provided
-with these components. Install and activate it with:
-```shell
-conda create -f conda/env.yaml
-conda activate hipop-dev
-```
-Please note that the use of this Conda environment is optional. HiPOP can be used with regular
-(non-Conda) set-ups.
+- If you don't have the prerequisite C++/OpenMP/CMake components available on you system,
+  but you have [Conda](https://docs.conda.io/) available, a Conda environment is provided
+  with these components. Install and activate it with:
+  ```shell
+  conda create -f conda/env.yaml
+  conda activate hipop-dev
+  ```
+  Please note that the use of this Conda environment is optional. HiPOP can be used with regular
+  (non-Conda) set-ups.
 
-4. If you are using MacOS and the Apple Clang C++ compiler, please note that OpenMP
-may not be available by default. You may install it with:
-```shell
-brew install libomp
-OpenMP_ROOT=$(brew --prefix libomp)
-```
-Alternatively, you may also use the Conda environment (cf. the previous remark).
+- If you are using MacOS and the Apple Clang C++ compiler, please note that OpenMP
+  may not be available by default. You may install it with:
+  ```shell
+  brew install libomp
+  OpenMP_ROOT=$(brew --prefix libomp)
+  ```
+  Alternatively, you may also use the Conda environment (cf. the previous remark).
 
 
 ### C++ only
