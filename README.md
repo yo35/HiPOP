@@ -60,7 +60,7 @@ Then, here is the local build install procedure:
 
 Remarks:
 
-- The `--group` option requires pip ≥ 25.1. If you have an older version,
+- The `--group <group-name>` option requires pip ≥ 25.1. If you have an older version,
   the install command above will fail with an error message such as `no such option: --group`.
   In this case, try to upgrade pip beforehand with:
   ```shell
@@ -68,7 +68,12 @@ Remarks:
   ```
   Alternatively, install the test runner `pytest` manually (or skip the optional test running step).
 
-- TODO: editable installs
+- Editable install mode can be used. The install command then becomes:
+  ```shell
+  pip install --group dev --editable .
+  ```
+  Please note that using the `--group dev` option (or equivalent, to install the dev dependencies)
+  is mandatory for HiPOP editable installs.
 
 - If you don't have the prerequisite C++/OpenMP/CMake components available on your system,
   but you have [Conda](https://docs.conda.io/) available, a Conda environment with these components
