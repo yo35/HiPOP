@@ -11,7 +11,7 @@ It is composed of:
 - a Python wrapper exposing the C++ classes and functions to the Python world.
 
 
-## Install Hipop
+## Install HiPOP
 
 ### Install prebuilt distribution
 
@@ -30,7 +30,7 @@ This installation method requires your OS / system architecture to be one of the
 
 The exact list of prebuilt distributions is available on
 https://pypi.org/project/scisoftdev-tmp-HiPOP/#files.
-If none of them matches your environment, please contact to the package maintainers,
+If none of them matches your environment, please contact the package maintainers,
 or try the local build installation method.
 
 
@@ -70,7 +70,7 @@ Remarks:
 
 - TODO: editable installs
 
-- If you don't have the prerequisite C++/OpenMP/CMake components available on you system,
+- If you don't have the prerequisite C++/OpenMP/CMake components available on your system,
   but you have [Conda](https://docs.conda.io/) available, a Conda environment with these components
   is provided with the HiPOP sources. Install and activate it with:
   ```shell
@@ -96,7 +96,7 @@ This installation procedure allows you to build locally and install only the HiP
 The Python wrapper is neither built nor installed here.
 This procedure is intended for advanced users.
 
-For this procedure, same requirements as mentionned in the previous section
+For this procedure, same requirements as mentioned in the previous section
 in terms of C++/OpenMP/CMake components.
 However, you don't need to have Python installed on your system.
 
@@ -109,4 +109,4 @@ make
 make test    # Optionally, to run the tests
 make install
 ```
-... where `<install-directory>` is the path the location where you want to install HiPOP.
+... where `<install-directory>` is the path to the location where you want to install HiPOP.
