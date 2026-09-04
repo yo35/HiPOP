@@ -1,9 +1,6 @@
 name: Continuous integration checks
 
 on:
-  push:
-    branches:
-      - 'feature/**' # TODO remove feature/* once the workflow is stable
   pull_request:
     branches:
       - main
