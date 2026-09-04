@@ -37,6 +37,7 @@ jobs:
         # (CMake uses this variable as a search hint).
         run: |
           brew install libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: C++ core library - Configure
         run: cmake -S . -B build-cpponly -G Ninja
