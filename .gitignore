@@ -7,6 +7,10 @@ __pycache__/
 # Temporary/cache directories created by miscellaneous development tools
 /.pytest_cache/
 
+# Output directories for Python distribution files (wheels & source distributions)
+/dist/
+/wheelhouse/
+
 # Python virtual environments (usual names)
 env/
 venv/

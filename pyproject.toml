@@ -42,12 +42,16 @@ build = [ # Dependencies needed for build tasks. Must be kept identical to "buil
     "pybind11 >= 3.1",
     "scikit-build-core >= 1.0",
 ]
-test = [
+test = [ # Dependencies needed for test tasks. Must be kept identical to tool.cibuildwheel."test-requires"
     "pytest >= 9.1",
 ]
 dev = [ # All dependencies needed for development tasks.
     { include-group = "build" },
     { include-group = "test" },
+]
+distrib = [ # Dependencies needed to build distribution files (wheels & source distributions).
+    "build >= 1.6",
+    "cibuildwheel >= 4.2",
 ]
 
 
@@ -92,3 +96,34 @@ HIPOP_WITH_EXAMPLES = "OFF"
 [[tool.scikit-build.generate]]
 path = "hipop/__init__.py"
 template-path = "python/hipop/__init__.py.template"
+
+
+# ------------------------------------------------------------------------------
+# Configuration of distribution file generation wheels & source distributions)
+
+[tool.cibuildwheel]
+build = [
+    "*-manylinux_x86_64",
+    "*-win_amd64",
+    "*-macosx_arm64",
+]
+skip = [
+    "cp3??t-*", # Free-threaded standard interpreter (see https://docs.python.org/3/glossary.html#term-free-threading)
+]
+test-requires = [ # Must be kept identical to "dependency-groups".test
+    "pytest >= 9.1",
+]
+test-command = "pytest {project}"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install libomp"
+environment = { OpenMP_ROOT = "$(brew --prefix libomp)", MACOSX_DEPLOYMENT_TARGET = "14" }
+#
+# MACOSX_DEPLOYMENT_TARGET = Oldest MacOS version supported by the generated wheels.
+# The version of the MacOS runner must be chosen accordingly.
+#
+# FIXME The availability of runners with "old" MacOS version on GitHub is not ensured,
+# which limits the backward compatibility of the wheels produced with the current configuration.
