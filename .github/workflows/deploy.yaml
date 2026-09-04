@@ -9,7 +9,7 @@ jobs:
 
   check-version:
     name: Check git tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - uses: actions/checkout@v7
@@ -19,7 +19,7 @@ jobs:
           project_version="v$(tr -d '[:space:]' < VERSION.txt)"
           echo "Git tag = [$GITHUB_REF_NAME]"
           echo "Project version = [$project_version]"
-          if [ "$GITHUB_REF_NAME" != "$project_version" ]; then
+          if [[ "$GITHUB_REF_NAME" != "$project_version" ]]; then
             echo "Mismatch between git tag and project version (VERSION.txt), aborting deployment..."
             exit 1
           fi
