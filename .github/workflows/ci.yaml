@@ -58,6 +58,7 @@ jobs:
   ci-passed:
     name: CI checks all OK
     runs-on: ubuntu-slim
+    if: always()
     needs:
       - build-and-test
 
