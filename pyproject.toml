@@ -42,8 +42,12 @@ build = [ # Dependencies needed for build tasks. Must be kept identical to "buil
     "pybind11 >= 3.1",
     "scikit-build-core >= 1.0",
 ]
+test = [
+    "pytest >= 9.1",
+]
 dev = [ # All dependencies needed for development tasks.
     { include-group = "build" },
+    { include-group = "test" },
 ]
 
 

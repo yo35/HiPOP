@@ -4,6 +4,9 @@
 # Python bytecode directories
 __pycache__/
 
+# Temporary/cache directories created by miscellaneous development tools
+/.pytest_cache/
+
 # Python virtual environments (usual names)
 env/
 venv/
