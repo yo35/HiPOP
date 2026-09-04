@@ -10,8 +10,8 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
-  build-and-test:
 
+  build-and-test:
     name: Build & test (py ${{ matrix.python-version }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
@@ -56,3 +56,23 @@ jobs:
 
       - name: Python wrapper - Run tests
         run: pytest
+
+  # This final job acts as a gate to ensure all the previous jobs have succeeded.
+  # It is provided to be registered as a status check for pull requests.
+  ci-passed:
+    name: CI checks all OK
+    runs-on: ubuntu-slim
+    if: always()
+    needs:
+      - build-and-test
+
+    steps:
+      - name: Ensure all CI jobs passed
+        run: |
+          for result in ${{ join(needs.*.result, ' ') }}; do
+            if [[ "$result" != "success" ]]; then
+              echo "At least one CI job did not succeed."
+              exit 1
+            fi
+          done
+          echo "All CI jobs succeeded."
