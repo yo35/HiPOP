@@ -1,0 +1,58 @@
+name: Continuous integration checks
+
+on:
+  push:
+    branches:
+      - 'feature/**' # TODO remove feature/* once the workflow is stable
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  build-and-test:
+
+    name: Build & test (py ${{ matrix.python-version }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+          - ubuntu-latest  # Arch: x64
+          - windows-latest # Arch: x64
+          - macos-latest   # Arch: arm64
+        python-version:
+          - '3.10' # Oldest supported version (must be kept consistent with the classifiers in `pyproject.toml`).
+          - '3.14' # Most recent supported version (must be kept consistent with the classifiers in `pyproject.toml`).
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install OpenMP (macOS only)
+        if: runner.os == 'macOS'
+        # AppleClang has no OpenMP by default, thus it must be installed separately.
+        # The environment variable OpenMP_ROOT is then exported for subsequent steps
+        # (CMake uses this variable as a search hint).
+        run: |
+          brew install libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
+
+      - name: C++ core library - Configure
+        run: cmake -S . -B build-cpponly -G Ninja
+
+      - name: C++ core library - Build
+        run: cmake --build build-cpponly
+
+      - name: C++ core library - Run tests
+        run: ctest --test-dir build-cpponly --output-on-failure --no-tests=error
+
+      - name: Python wrapper - Build & install
+        run: pip install --group dev .
+
+      - name: Python wrapper - Run tests
+        run: pytest
