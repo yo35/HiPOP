@@ -1,4 +1,4 @@
-pybind11_add_module(cpp
+nanobind_add_module(cpp
     hipop/cpp/main.cpp
     hipop/cpp/graph.cpp
     hipop/cpp/shortest_path.cpp

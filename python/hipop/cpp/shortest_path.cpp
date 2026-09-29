@@ -1,67 +1,72 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>
+#include <nanobind/stl/set.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/unordered_map.h>
+#include <nanobind/stl/unordered_set.h>
+#include <nanobind/stl/vector.h>
 
 #include <hipop/shortest_path.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace hipop_wrappers {
 
-void shortest_path(py::module_ &m) {
+void shortest_path(nb::module_ &m) {
     m.def(
         "dijkstra",
         &hipop::dijkstra,
-        py::arg("graph"),
-        py::arg("origin"),
-        py::arg("destination"),
-        py::arg("cost"),
-        py::arg("map_label_cost"),
-        py::arg("available_labels") = setstring());
+        nb::arg("graph"),
+        nb::arg("origin"),
+        nb::arg("destination"),
+        nb::arg("cost"),
+        nb::arg("map_label_cost"),
+        nb::arg("available_labels") = setstring());
     m.def(
         "dijkstra_single_source",
         &hipop::dijkstraSingleSource,
-        py::arg("graph"),
-        py::arg("origin"),
-        py::arg("cost"),
-        py::arg("map_label_cost"),
-        py::arg("available_labels") = setstring());
+        nb::arg("graph"),
+        nb::arg("origin"),
+        nb::arg("cost"),
+        nb::arg("map_label_cost"),
+        nb::arg("available_labels") = setstring());
     m.def(
       "floyd_warshall",
       &hipop::floydWarshall,
-      py::arg("graph"),
-      py::arg("cost"),
-      py::arg("map_label_cost"),
-      py::arg("available_labels") = setstring()
+      nb::arg("graph"),
+      nb::arg("cost"),
+      nb::arg("map_label_cost"),
+      nb::arg("available_labels") = setstring()
     );
     m.def(
         "parallel_dijkstra",
         &hipop::parallelDijkstra,
-        py::arg("graph"),
-        py::arg("origins"),
-        py::arg("destinations"),
-        py::arg("map_label_costs"),
-        py::arg("cost"),
-        py::arg("thread_number"),
-        py::arg("available_labels") = std::vector<setstring>());
+        nb::arg("graph"),
+        nb::arg("origins"),
+        nb::arg("destinations"),
+        nb::arg("map_label_costs"),
+        nb::arg("cost"),
+        nb::arg("thread_number"),
+        nb::arg("available_labels") = std::vector<setstring>());
     m.def(
         "parallel_dijkstra_single_source",
         &hipop::parallelDijkstraSingleSource,
-        py::arg("graph"),
-        py::arg("origins"),
-        py::arg("map_label_costs"),
-        py::arg("cost"),
-        py::arg("thread_number"),
-        py::arg("available_labels") = std::vector<setstring>());
+        nb::arg("graph"),
+        nb::arg("origins"),
+        nb::arg("map_label_costs"),
+        nb::arg("cost"),
+        nb::arg("thread_number"),
+        nb::arg("available_labels") = std::vector<setstring>());
     m.def(
         "parallel_dijkstra_heterogeneous_costs",
         &hipop::parallelDijkstraHeterogeneousCosts,
-        py::arg("graph"),
-        py::arg("origins"),
-        py::arg("destinations"),
-        py::arg("map_label_costs"),
-        py::arg("costs"),
-        py::arg("thread_number"),
-        py::arg("available_labels") = std::vector<setstring>());
+        nb::arg("graph"),
+        nb::arg("origins"),
+        nb::arg("destinations"),
+        nb::arg("map_label_costs"),
+        nb::arg("costs"),
+        nb::arg("thread_number"),
+        nb::arg("available_labels") = std::vector<setstring>());
     m.def("k_shortest_path", &hipop::KShortestPath);
     m.def("parallel_k_shortest_path", &hipop::parallelKShortestPath);
     m.def("yen_k_shortest_path", &hipop::YenKShortestPath);
@@ -72,19 +77,19 @@ void shortest_path(py::module_ &m) {
     m.def(
         "parallel_k_intermodal_shortest_path",
         &hipop::parallelKIntermodalShortestPath,
-        py::arg("graph"),
-        py::arg("origins"),
-        py::arg("destinations"),
-        py::arg("map_label_costs"),
-        py::arg("cost"),
-        py::arg("thread_number"),
-        py::arg("pair_mandatory_labels"),
-        py::arg("max_diff_cost"),
-        py::arg("max_dist_in_common"),
-        py::arg("cost_multiplier"),
-        py::arg("max_retry"),
-        py::arg("nb_paths"),
-        py::arg("available_labels") = std::vector<setstring>());
+        nb::arg("graph"),
+        nb::arg("origins"),
+        nb::arg("destinations"),
+        nb::arg("map_label_costs"),
+        nb::arg("cost"),
+        nb::arg("thread_number"),
+        nb::arg("pair_mandatory_labels"),
+        nb::arg("max_diff_cost"),
+        nb::arg("max_dist_in_common"),
+        nb::arg("cost_multiplier"),
+        nb::arg("max_retry"),
+        nb::arg("nb_paths"),
+        nb::arg("available_labels") = std::vector<setstring>());
 }
 
 }
