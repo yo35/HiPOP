@@ -1,5 +1,6 @@
 #include "hipop/shortest_path.h"
 
+#include "hipop/graph_path.h"
 #include "hipop/string_util.h"
 
 #include <omp.h>

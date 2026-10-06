@@ -1,7 +1,8 @@
 #pragma once
 
 #include <hipop/graph_path.h>
-#include <hipop/shortest_path.h>
+#include <hipop/graph_path_cost.h>
+#include <hipop/shortest_path.h> // TODO remove
 
 #include <algorithm>
 #include <cmath>

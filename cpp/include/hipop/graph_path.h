@@ -311,10 +311,4 @@ namespace hipop {
     };
 
 
-    /**
-     * Tuple (OrientedGraphPath, cost-value).
-     */
-    using PathCost = std::pair<OrientedGraphPath, double>;
-
-
 } // namespace hipop
