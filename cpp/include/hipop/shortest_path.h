@@ -17,8 +17,6 @@ using ShortestPathsTree = std::unordered_map<std::string, std::string>;
 
 namespace hipop {
 
-    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path); // TODO remove
-
     std::optional<PathCost> dijkstra(
         const OrientedGraph &G,
         const std::string &origin,
@@ -90,7 +88,8 @@ namespace hipop {
         const setstring &accessibleLinkLabels,
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         int kPath);
-    std::vector<pathCost> KShortestPath(
+
+    std::vector<PathCost> KShortestPath(
         OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -104,7 +103,7 @@ namespace hipop {
         int kPath,
         bool intermodal);
 
-    std::vector<std::vector<pathCost>> parallelKShortestPath(
+    std::vector<std::vector<PathCost>> parallelKShortestPath(
         OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -118,7 +117,7 @@ namespace hipop {
         const std::vector<int> &kPaths,
         int threadNumber);
 
-    std::vector<std::vector<pathCost>> parallelKIntermodalShortestPath(
+    std::vector<std::vector<PathCost>> parallelKIntermodalShortestPath(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,

@@ -573,12 +573,9 @@ namespace hipop
      * @param initial_costs The intial cost of the links to save
      * @param costMultiplier The multiplier to apply to the links costs of the path
      */
-    void increaseCostsFromPath(OrientedGraph &G, const std::vector<std::string> &path, linkMapCosts &initial_costs, double costMultiplier)
-    {
-
-        for (size_t i = 0; i < path.size() - 1; i++)
-        {
-            Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
+    void increaseCostsFromPath(OrientedGraph &G, const OrientedGraphPath &path, linkMapCosts &initial_costs, double costMultiplier) {
+        for (const Link *constlink : path.links()) {
+            Link *link = G.mlinks.at(constlink->mid);
             if (initial_costs.find(link->mid) == initial_costs.end())
             {
                 for (auto &keyMapCost : link->mcosts)
@@ -608,11 +605,9 @@ namespace hipop
      * @param initial_costs The intial cost of the links to save
      * @param costMultiplier The multiplier to apply to the links costs of the path
      */
-    void increaseCostsFromIntermodalPath(OrientedGraph &G, const std::vector<std::string> &path, linkMapCosts &initial_costs, double costMultiplier)
-    {
-        for (size_t i = 0; i < path.size() - 1; i++)
-        {
-            Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
+    void increaseCostsFromIntermodalPath(OrientedGraph &G, const OrientedGraphPath &path, linkMapCosts &initial_costs, double costMultiplier) {
+        for (const Link *constlink : path.links()) {
+            Link *link = G.mlinks.at(constlink->mid);
             std::string decoded_link_id = removeIntermodalLinkSuffix(link->mid);
 
             if (initial_costs.find(decoded_link_id) == initial_costs.end())
@@ -666,106 +661,38 @@ namespace hipop
 
 
     /**
-     * @brief Compute the length of a path
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param path The path
-     * @return double The length of the path
-     */
-    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path) // TODO remove
-    {
-        double length = 0;
-
-        for (size_t i = 0; i < path.size() - 1; i++)
-        {
-            Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
-            length += link->mlength;
-        }
-
-        return length;
-    }
-
-    /**
      * @brief Compute the relative distances in common between path and paths
      *
-     * @param G The OrientedGraph
      * @param path The path to compare to paths
      * @param paths The paths
      * @return std::vector<double> The relative distances in common
      */
-    std::vector<double> computeRelativeDistancesInCommon(OrientedGraph &G, const std::vector<std::string> &path, std::vector<pathCost> &paths)
+    std::vector<double> computeRelativeDistancesInCommon(
+        const OrientedGraphPath &path,
+        const std::vector<PathCost> &paths)
     {
-        //assert path.size() > 0;
         std::size_t nbPaths = paths.size();
         std::vector<double> relDists(nbPaths);
+        const double pathLength = computePathLength(path);
 
-        for (std::size_t i = 0; i < nbPaths; i++)
-        {
-            std::vector<std::string> compared_p = paths[i].first;
-            //assert compared_p.size() > 0;
-            double path_length = computePathLength(G, path);
-            double compared_p_length = computePathLength(G, compared_p);
-            int compared_p_size = compared_p.size();
-            std::vector<std::string> compared_p_links(compared_p_size);
-            for (int j = 0; j < compared_p_size - 1; j++)
-            {
-                Link *link = G.mnodes[compared_p[j]]->madj[compared_p[j + 1]];
-                compared_p_links[j] = link->mid;
-            }
+        for (std::size_t i = 0; i < nbPaths; i++) {
+            const OrientedGraphPath &comparedPath = paths[i].first;
+            double comparedPathLength = computePathLength(comparedPath);
+
+            // Gather the links of the compared path in a set, for fast detection
+            // of whether a link is part of not of the comparated path.
+            std::unordered_set<const Link*> comparedPathLinks(comparedPath.links().begin(), comparedPath.links().end());
+
             double commonDist = 0;
-            for (std::size_t j = 0; j + 1 < path.size(); j++)
-            {
-                Link *link = G.mnodes[path[j]]->madj[path[j + 1]];
-                if (std::find(compared_p_links.begin(), compared_p_links.end(), link->mid) != compared_p_links.end())
-                {
-                  commonDist += link->mlength;
+            for (const Link *link : path.links()) {
+                if (comparedPathLinks.find(link) != comparedPathLinks.end()) {
+                    commonDist += link->mlength;
                 }
             }
-            relDists[i] = commonDist / fmax(path_length, compared_p_length);
+            relDists[i] = commonDist / std::max(pathLength, comparedPathLength);
         }
 
         return relDists;
-    }
-
-    /**
-     * @brief Compute the total cost of a path using map for effective cost on some links of the graph.
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param path The path
-     * @param costMetric The cost metric to consider
-     * @param labelToCostFamily The cost family to use for each link label
-     * @param initialCosts The effective costs values to use for some links
-     * @return double The total cost of the path
-     */
-    double computePathCostWithInitialCostsDict(
-        OrientedGraph &G,
-        const std::vector<std::string> &path,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily,
-        linkMapCosts initialCosts)
-    {
-        double c = 0;
-
-        if (path.size() == 0)
-        {
-          return c;
-        }
-        else
-        {
-          for (size_t i = 0; i < path.size() - 1; i++)
-          {
-              Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
-              if (initialCosts.find(link->mid) != initialCosts.end())
-              {
-                  c += initialCosts[link->mid][labelToCostFamily.at(link->mlabel)][costMetric];
-              }
-              else
-              {
-                  c += link->cost(labelToCostFamily.at(link->mlabel), costMetric);
-              }
-          }
-          return c;
-        }
     }
 
 
@@ -808,9 +735,9 @@ namespace hipop
      * @param maxRetry Maximum number of times we retry to find an acceptable shorest path
      * @param kPath The number of paths to compute
      * @param intermodal Specifies we search k intermodal shortest paths on a tripled graph
-     * @return std::vector<pathCost> The vector of k computed paths
+     * @return The vector of k computed paths
      */
-     std::vector<pathCost> KShortestPath(
+     std::vector<PathCost> KShortestPath(
         OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -825,61 +752,70 @@ namespace hipop
         bool intermodal)
 
     {
-        std::vector<pathCost> paths;
+        std::vector<PathCost> paths;
         linkMapCosts initial_costs;
 
-        auto firstPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
-        // paths.push_back(firstPath); TODO must be removed, impacts?
-        if (!firstPath) { // no path found
+        auto firstPathOpt = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
+        if (!firstPathOpt) { // no path found
             return paths;
         }
 
-        std::vector<std::string> firstPathNodeIds = firstPath->first.nodeIds();
-        double firstPathCost = firstPath->second;
-        paths.emplace_back(firstPathNodeIds, firstPathCost);
+        const OrientedGraphPath &firstPath = firstPathOpt->first;
+        double firstPathCost = firstPathOpt->second;
+        paths.emplace_back(*firstPathOpt);
 
         if (intermodal)
         {
-            increaseCostsFromIntermodalPath(G, firstPathNodeIds, initial_costs, costMultiplier);
+            increaseCostsFromIntermodalPath(G, firstPath, initial_costs, costMultiplier);
         }
         else
         {
-            increaseCostsFromPath(G, firstPathNodeIds, initial_costs, costMultiplier);
+            increaseCostsFromPath(G, firstPath, initial_costs, costMultiplier);
         }
 
         int pathCounter = 1, retry = 0;
 
         while (pathCounter < kPath && retry < maxRetry )
         {
-            auto newPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
-            if (!newPath) { // no path found
+            auto newPathOpt = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
+            if (!newPathOpt) { // no path found
                 break;
             }
 
-            std::vector<std::string> newPathNodeIds = newPath->first.nodeIds();
-            double newPathCost = computePathCostWithInitialCostsDict(G, newPathNodeIds, costMetric, labelToCostFamily, initial_costs);
+            const OrientedGraphPath &newPath = newPathOpt->first;
+
+            // The cost as returned by dijkstra(..) has been computed with the modified costs,
+            // thus it must be recomputed to correspond to the "true" cost.
+            double newPathCost = computePathCostGeneric(newPath, [&](const Link *link) {
+                auto it = initial_costs.find(link->mid);
+                return it == initial_costs.end() ?
+                    link->cost(labelToCostFamily.at(link->mlabel), costMetric) :
+                    it->second[labelToCostFamily.at(link->mlabel)][costMetric];
+            });
 
             // Check conditions to accept this new path
-            std::vector<double> relDistancesInCommon = computeRelativeDistancesInCommon(G, newPathNodeIds, paths); // relative distances in common between newPath and the already found ones
-            bool maxDistInCommonChecked = (std::all_of(relDistancesInCommon.cbegin(), relDistancesInCommon.cend(), [maxDistInCommon](double rd){ return rd  <= maxDistInCommon; }));
+            std::vector<double> relDistancesInCommon = computeRelativeDistancesInCommon(newPath, paths);
+            bool maxDistInCommonChecked = std::all_of(relDistancesInCommon.cbegin(), relDistancesInCommon.cend(),
+                [maxDistInCommon](double rd){ return rd  <= maxDistInCommon; });
             bool maxDiffCostChecked = (newPathCost - firstPathCost) / firstPathCost <= maxDiffCost;
             bool isNew = true;
             if (intermodal)
             {
-                isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPathNodeIds](const pathCost &p){
-                    return decodeIntermodalPath(p.first) != decodeIntermodalPath(newPathNodeIds);
-                });
+                isNew = true; // TODO replug
+                //isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPathNodeIds](const pathCost &p){
+                //    return decodeIntermodalPath(p.first) != decodeIntermodalPath(newPathNodeIds);
+                //});
             }
             else
             {
-                isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPathNodeIds](const pathCost &p){
-                    return p.first != newPathNodeIds;
+                isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPath](const PathCost &p) {
+                    return p.first != newPath;
                 });
             }
 
             if (maxDistInCommonChecked && maxDiffCostChecked && isNew)
             {
-                paths.emplace_back(newPathNodeIds, newPathCost);
+                paths.emplace_back(newPath, newPathCost);
                 retry = 0;
                 pathCounter += 1;
             }
@@ -890,11 +826,11 @@ namespace hipop
 
             if (intermodal)
             {
-                increaseCostsFromIntermodalPath(G, newPathNodeIds, initial_costs, costMultiplier);
+                increaseCostsFromIntermodalPath(G, newPath, initial_costs, costMultiplier);
             }
             else
             {
-                increaseCostsFromPath(G, newPathNodeIds, initial_costs, costMultiplier);
+                increaseCostsFromPath(G, newPath, initial_costs, costMultiplier);
             }
         }
 
@@ -1051,9 +987,8 @@ namespace hipop
      * @param maxRetry Maximum number of times we retry to find an acceptable shorest path
      * @param kPaths The number of paths to compute
      * @param threadNumber Number of threads to use
-     * @return std::vector<std::vector<pathCost>>
      */
-    std::vector<std::vector<pathCost>> parallelKShortestPath(
+    std::vector<std::vector<PathCost>> parallelKShortestPath(
         OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -1070,7 +1005,7 @@ namespace hipop
         omp_set_num_threads(threadNumber);
 
         std::size_t nbODs = origins.size();
-        std::vector<std::vector<pathCost>> res(nbODs);
+        std::vector<std::vector<PathCost>> res(nbODs);
 
         std::vector<int> uniqueIndices;
         std::unordered_map<int, int> duplicateIndices;
@@ -1110,13 +1045,13 @@ namespace hipop
         for (std::size_t i = 0; i < nbODs; ++i)
         {
             std::size_t k = kPaths[i];
-            std::vector<pathCost> res_paths = res[i];
+            std::vector<PathCost> res_paths = res[i];
             if (res_paths.size() > k)
             {
-                std::sort(res_paths.begin(), res_paths.end(), [](const pathCost &a, const pathCost &b) {
+                std::sort(res_paths.begin(), res_paths.end(), [](const PathCost &a, const PathCost &b) {
                     return a.second < b.second;
                 });
-                std::vector<pathCost> res_k_best_paths(res_paths.begin(), res_paths.begin() + k);
+                std::vector<PathCost> res_k_best_paths(res_paths.begin(), res_paths.begin() + k);
                 res[i] = res_k_best_paths;
             }
         }
@@ -1258,9 +1193,9 @@ namespace hipop
      *                       accepted shortest path
      * @param maxRetry Maximum number of times we retry to find an acceptable shorest path
      * @param accessibleLinkLabels The vector of accessible link labels
-     * @return std::vector<std::vector<pathCost>> The vector of computed shortest path
+     * @return The vector of computed shortest path
      */
-    std::vector<std::vector<pathCost>> parallelKIntermodalShortestPath(
+    std::vector<std::vector<PathCost>> parallelKIntermodalShortestPath(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -1400,7 +1335,7 @@ namespace hipop
         omp_set_num_threads(threadNumber);
 
         std::size_t nbOD = origins.size();
-        std::vector<std::vector<pathCost>> res(nbOD);
+        std::vector<std::vector<PathCost>> res(nbOD);
 
         std::vector<int> uniqueIndices;
         std::unordered_map<int, int> duplicateIndices;
@@ -1420,8 +1355,8 @@ namespace hipop
           for (std::int64_t i = 0; i < nbUniqueIndices; i++)
           {
             int idx = uniqueIndices[i];
-            std::vector<pathCost> resPath1;
-            std::vector<pathCost> resPath2;
+            std::vector<PathCost> resPath1;
+            std::vector<PathCost> resPath2;
 
             if (accessibleLinkLabels.empty())
             {
@@ -1438,21 +1373,21 @@ namespace hipop
             // Concat resPath1 and resPath2
             resPath1.insert(resPath1.end(), resPath2.begin(), resPath2.end());
             // Decode paths
-            for (auto &path1 : resPath1) {
-                path1.first = decodeIntermodalPath(path1.first);
-            }
+            //for (auto &path1 : resPath1) {
+            //    TODO replug path1.first = decodeIntermodalPath(path1.first);
+            //}
             // Keep only unique paths
-            sort( resPath1.begin(), resPath1.end() );
-            resPath1.erase(std::unique( resPath1.begin(), resPath1.end() ), resPath1.end() );
+            // TODO replug sort( resPath1.begin(), resPath1.end() );
+            // TODO replug resPath1.erase(std::unique( resPath1.begin(), resPath1.end() ), resPath1.end() );
 
             // Keep the k best paths found
-            std::sort(resPath1.begin(), resPath1.end(), [](const pathCost &a, const pathCost &b) {
+            std::sort(resPath1.begin(), resPath1.end(), [](const PathCost &a, const PathCost &b) {
                 return a.second < b.second;
             });
             std::size_t currentNbPaths = nbPaths[idx];
             if (resPath1.size() >= currentNbPaths)
             {
-                std::vector<pathCost> resPath(resPath1.begin(), resPath1.begin() + currentNbPaths);
+                std::vector<PathCost> resPath(resPath1.begin(), resPath1.begin() + currentNbPaths);
                 res[idx] = resPath;
             }
             else
@@ -1474,13 +1409,13 @@ namespace hipop
       for (std::size_t i = 0; i < nbOD; ++i)
       {
           std::size_t k = kPaths[i];
-          std::vector<pathCost> res_paths = res[i];
+          std::vector<PathCost> res_paths = res[i];
           if (res_paths.size() > k)
           {
-              std::sort(res_paths.begin(), res_paths.end(), [](const pathCost &a, const pathCost &b) {
+              std::sort(res_paths.begin(), res_paths.end(), [](const PathCost &a, const PathCost &b) {
                 return a.second < b.second;
               });
-              std::vector<pathCost> res_k_best_paths(res_paths.begin(), res_paths.begin() + k);
+              std::vector<PathCost> res_k_best_paths(res_paths.begin(), res_paths.begin() + k);
               res[i] = res_k_best_paths;
           }
       }
