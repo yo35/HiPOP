@@ -17,18 +17,7 @@ using ShortestPathsTree = std::unordered_map<std::string, std::string>;
 
 namespace hipop {
 
-    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path);
-
-    double computePathCost(OrientedGraph &G,
-        const std::vector<std::string> &path,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily);
-
-    std::vector<std::vector<double>> computePathsCosts(OrientedGraph &G,
-        const std::vector<std::vector<std::vector<std::string>>> &paths,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily,
-        int threadNumber);
+    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path); // TODO remove
 
     std::optional<PathCost> dijkstra(
         const OrientedGraph &G,

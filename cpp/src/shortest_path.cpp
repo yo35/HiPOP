@@ -673,7 +673,7 @@ namespace hipop
      * @param path The path
      * @return double The length of the path
      */
-    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path)
+    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path) // TODO remove
     {
         double length = 0;
 
@@ -726,80 +726,6 @@ namespace hipop
         }
 
         return relDists;
-    }
-
-    /**
-     * @brief Batch computation of paths costs
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param paths The paths grouped in batches
-     * @param costMetric The cost metric to consider
-     * @param labelToCostFamily The cost family to use for each link label
-     * @param threadNumber Number of threads to use
-     * @return std::vector<double> The total costs of the paths
-     */
-    std::vector<std::vector<double>> computePathsCosts(
-        OrientedGraph &G,
-        const std::vector<std::vector<std::vector<std::string>>> &paths,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily,
-        int threadNumber)
-    {
-        omp_set_num_threads(threadNumber);
-        int nbBatches = paths.size();
-
-        std::vector<std::vector<double>> res(nbBatches);
-
-        #pragma omp parallel shared(res, G, paths, costMetric, labelToCostFamily)
-        {
-            OrientedGraph privateG = G;
-
-            #pragma omp for
-            for (int i = 0; i < nbBatches; i++)
-            {
-                int nbPaths = paths[i].size();
-                std::vector<double> res_(nbPaths);
-                for (int j = 0; j < nbPaths; j++)
-                {
-                  res_[j] = computePathCost(privateG, paths[i][j], costMetric, labelToCostFamily);
-                }
-                res[i] = res_;
-            }
-        }
-
-        return res;
-    }
-
-    /**
-     * @brief Compute the total cost of a path
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param path The path
-     * @param costMetric The cost metric to consider
-     * @param labelToCostFamily The cost family to use for each link label
-     * @return double The total cost of the path
-     */
-    double computePathCost(
-        OrientedGraph &G,
-        const std::vector<std::string> &path,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily)
-    {
-        double c = 0;
-
-        if (path.size() == 0)
-        {
-          return c;
-        }
-        else
-        {
-          for (size_t i = 0; i < path.size() - 1; i++)
-          {
-              Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
-              c += link->cost(labelToCostFamily.at(link->mlabel), costMetric);
-          }
-          return c;
-        }
     }
 
     /**
