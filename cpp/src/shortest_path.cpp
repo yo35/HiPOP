@@ -14,7 +14,6 @@
 #include <limits>
 #include <algorithm>
 #include <functional>
-#include <iostream>
 #include <cmath>
 #include <cstdint>
 #include <string_view>
@@ -767,36 +766,6 @@ namespace hipop
           }
           return c;
         }
-    }
-
-    /**
-     * @brief Print a path
-     *
-     * @param path The path to print
-     */
-    void showPath(const pathCost &path)
-    {
-        std::cout << path.second << " [";
-        for (const auto &p : path.first)
-        {
-            std::cout << p << ", ";
-        }
-        std::cout << "]\n" << std::flush;
-    }
-
-    /**
-     * @brief Print a path
-     *
-     * @param path The path to print
-     */
-    void showPathNodes(const std::vector<std::string> &path)
-    {
-        std::cout << " [";
-        for (const auto &p : path)
-        {
-            std::cout << p << ", ";
-        }
-        std::cout << "]\n" << std::flush;
     }
 
 

@@ -71,17 +71,7 @@ inline void assertEqualPaths(
 
     auto print = [](const std::optional<hipop::PathCost> &obj) {
         if (obj) {
-            const hipop::OrientedGraphPath &path = obj->first;
-            std::cerr << "from=" << path.origin()->mid << " links=[";
-            bool is_first_link = true;
-            for (const hipop::Link *link : path.links()) {
-                if (!is_first_link) {
-                    std::cerr << " ";
-                }
-                std::cerr << link->mid;
-                is_first_link = false;
-            }
-            std::cerr << "] to=" << path.destination()->mid << ", cost=" << obj->second << '\n';
+            std::cerr << obj->first << " cost=" << obj->second << '\n';
         }
         else {
             std::cerr << "<missing>";
