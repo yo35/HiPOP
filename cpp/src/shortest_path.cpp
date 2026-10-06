@@ -1,5 +1,5 @@
-#include "hipop/graph.h"
 #include "hipop/shortest_path.h"
+
 #include "hipop/string_util.h"
 
 #include <omp.h>
@@ -125,9 +125,9 @@ namespace hipop
      * @param costMetric The cost metric to consider in the shortest path algorithm
      * @param labelToCostFamily The cost family to use for each link label (multiple cost families can be defined on a Link)
      * @param accessibleLinkLabels The set of accessible link labels
-     * @return pathCost The list of Nodes defining the shortest path and the associated cost
+     * @return Shortest path + the associated cost, or std::nullopt if destination cannot be reached from origin.
      */
-    pathCost dijkstra(
+    std::optional<PathCost> dijkstra(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -138,22 +138,17 @@ namespace hipop
         const Node *origin_node = G.mnodes.at(origin);
         const Node *destination_node = G.mnodes.at(destination);
 
-        // Return a 0-node path with zero cost if origin and destination are identical.
-        // Remark: it would be more consistent with the general case to return 1-node path
-        // made of the single origin + destination node.
-        // Still, for compliance with legacy behavior, we return a 0-node path.
+        // Return an empty path (i.e. no link) with zero cost if origin and destination are identical.
         if (origin_node == destination_node) {
-            pathCost empty_path;
-            empty_path.second = 0;
-            return empty_path;
+            return PathCost{ OrientedGraphPath(origin_node), 0 };
         }
 
+        // TODO doc
         std::unordered_map<const Node*, double> dist; // No nullptr keys in this map.
-        std::unordered_map<const Node*, const Node*> prev; // No nullptr (neither as key nor as value) in this map.
+        std::unordered_map<const Node*, const Link*> prev; // No nullptr (neither as key nor as value) in this map.
         dist.reserve(G.mnodes.size());
         prev.reserve(G.mnodes.size());
         dist[origin_node] = 0;
-        // `prev[origin_node]` is intentionally left unset (the origin node has no predecessor).
 
         std::priority_queue<DijkstraQueueItem> pq;
         pq.emplace(DijkstraQueueItem{ 0, origin_node });
@@ -165,17 +160,18 @@ namespace hipop
             pq.pop();
 
             if (u == destination_node) {
-                pathCost path;
-                for (auto it = prev.find(u); it != prev.end(); it = prev.find(it->second)) {
-                    path.first.emplace_back(it->first->mid);
+                std::vector<const Link*> links;
+                const Node *v = destination_node;
+                while (v != origin_node) {
+                    const Link *link_to_v = prev.at(v);
+                    links.emplace_back(link_to_v);
+                    v = link_to_v->mup;
                 }
-                path.first.emplace_back(origin_node->mid);
-                std::reverse(path.first.begin(), path.first.end());
-                path.second = dist_u;
-                return path;
+                std::reverse(links.begin(), links.end());
+                return PathCost{ OrientedGraphPath(origin_node, std::move(links)), dist_u };
             }
 
-            u->forEachExit(u == origin_node ? "" : prev.at(u)->mid, [&](const Link *link) {
+            u->forEachExit(u == origin_node ? "" : prev.at(u)->mup->mid, [&](const Link *link) {
                 if (accessibleLinkLabels.empty() || accessibleLinkLabels.find(link->mlabel) != accessibleLinkLabels.end()) {
 
                     // The Dijkstra algorithm requires that all link costs are >= 0, and so does
@@ -191,17 +187,14 @@ namespace hipop
                     if (neighbor_it->second > new_dist) { // Follow the link only if it STRICTLY improves the distance.
                         neighbor_it->second = new_dist;
                         pq.emplace(DijkstraQueueItem{ new_dist, neighbor });
-                        prev[neighbor] = u;
+                        prev[neighbor] = link;
                     }
                 }
             });
         }
 
-        // No path from origin to destination was found: return a 0-node path with infinite cost in this case.
-        // Remark: to make it more expicit, it would be better to return an optional<pathCost> instead.
-        pathCost invalid_path;
-        invalid_path.second = INFINITY;
-        return invalid_path;
+        // No path from origin to destination was found.
+        return std::nullopt;
     }
 
     /**
@@ -426,7 +419,7 @@ namespace hipop
      * @param accessibleLinkLabels The vector of accessible link labels
      * @return std::vector<pathCost> The vector of computed shortest path
      */
-    std::vector<pathCost> parallelDijkstra(
+    std::vector<std::optional<PathCost>> parallelDijkstra(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -445,7 +438,7 @@ namespace hipop
         std::unordered_map<int, int> nbPathsPerOD;
         tie(uniqueIndices, duplicateIndices, nbPathsPerOD) = find_duplicates(origins, destinations, labelToCostFamily, costMetrics, emptyV);
 
-        std::vector<pathCost> res(nbPath);
+        std::vector<std::optional<PathCost>> res(nbPath);
 
         // FIXME MSVC is still stuck to OpenMP 2.0, which requires **signed** loop variables for parallel for.
         std::int64_t nbUniqueIndices = uniqueIndices.size();
@@ -525,7 +518,7 @@ namespace hipop
      * @param accessibleLinkLabels The vector of accessible link labels
      * @return std::vector<pathCost> The vector of computed shortest path
      */
-    std::vector<pathCost> parallelDijkstraHeterogeneousCosts(
+    std::vector<std::optional<PathCost>> parallelDijkstraHeterogeneousCosts(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -543,7 +536,7 @@ namespace hipop
         tie(uniqueIndices, duplicateIndices, nbPathsPerOD) = find_duplicates(origins, destinations, labelToCostFamily, costMetrics, emptyV);
 
         int nbPath = origins.size();
-        std::vector<pathCost> res(nbPath);
+        std::vector<std::optional<PathCost>> res(nbPath);
 
         // FIXME MSVC is still stuck to OpenMP 2.0, which requires **signed** loop variables for parallel for.
         std::int64_t nbUniqueIndices = uniqueIndices.size();
@@ -936,62 +929,61 @@ namespace hipop
         bool intermodal)
 
     {
-        //assert (maxDiffCost >= 0);
-        //assert (maxDistInCommon >= 0 and maxDistInCommon <= 1);
-
         std::vector<pathCost> paths;
         linkMapCosts initial_costs;
 
-        pathCost firstPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
-        paths.push_back(firstPath);
-
-        if (firstPath.first.empty()) // no path found
-        {
+        auto firstPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
+        // paths.push_back(firstPath); TODO must be removed, impacts?
+        if (!firstPath) { // no path found
             return paths;
         }
 
+        std::vector<std::string> firstPathNodeIds = firstPath->first.nodeIds();
+        double firstPathCost = firstPath->second;
+        paths.emplace_back(firstPathNodeIds, firstPathCost);
+
         if (intermodal)
         {
-            increaseCostsFromIntermodalPath(G, firstPath.first, initial_costs, costMultiplier);
+            increaseCostsFromIntermodalPath(G, firstPathNodeIds, initial_costs, costMultiplier);
         }
         else
         {
-            increaseCostsFromPath(G, firstPath.first, initial_costs, costMultiplier);
+            increaseCostsFromPath(G, firstPathNodeIds, initial_costs, costMultiplier);
         }
 
         int pathCounter = 1, retry = 0;
 
         while (pathCounter < kPath && retry < maxRetry )
         {
-            pathCost newPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
-            newPath.second = computePathCostWithInitialCostsDict(G, newPath.first, costMetric, labelToCostFamily, initial_costs);
-
-            if (newPath.first.empty())
-            {
-                break; // no path found
+            auto newPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
+            if (!newPath) { // no path found
+                break;
             }
 
+            std::vector<std::string> newPathNodeIds = newPath->first.nodeIds();
+            double newPathCost = computePathCostWithInitialCostsDict(G, newPathNodeIds, costMetric, labelToCostFamily, initial_costs);
+
             // Check conditions to accept this new path
-            std::vector<double> relDistancesInCommon = computeRelativeDistancesInCommon(G, newPath.first, paths); // relative distances in common between newPath and the already found ones
+            std::vector<double> relDistancesInCommon = computeRelativeDistancesInCommon(G, newPathNodeIds, paths); // relative distances in common between newPath and the already found ones
             bool maxDistInCommonChecked = (std::all_of(relDistancesInCommon.cbegin(), relDistancesInCommon.cend(), [maxDistInCommon](double rd){ return rd  <= maxDistInCommon; }));
-            bool maxDiffCostChecked = ( (newPath.second - firstPath.second) / firstPath.second <= maxDiffCost);
+            bool maxDiffCostChecked = (newPathCost - firstPathCost) / firstPathCost <= maxDiffCost;
             bool isNew = true;
             if (intermodal)
             {
-                isNew = std::all_of(paths.cbegin(), paths.cend(), [newPath](const pathCost &p){
-                    return decodeIntermodalPath(p.first) != decodeIntermodalPath(newPath.first);
+                isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPathNodeIds](const pathCost &p){
+                    return decodeIntermodalPath(p.first) != decodeIntermodalPath(newPathNodeIds);
                 });
             }
             else
             {
-                isNew = std::all_of(paths.cbegin(), paths.cend(), [newPath](const pathCost &p){
-                    return p.first != newPath.first;
+                isNew = std::all_of(paths.cbegin(), paths.cend(), [&newPathNodeIds](const pathCost &p){
+                    return p.first != newPathNodeIds;
                 });
             }
 
             if (maxDistInCommonChecked && maxDiffCostChecked && isNew)
             {
-                paths.push_back(newPath);
+                paths.emplace_back(newPathNodeIds, newPathCost);
                 retry = 0;
                 pathCounter += 1;
             }
@@ -1002,11 +994,11 @@ namespace hipop
 
             if (intermodal)
             {
-                increaseCostsFromIntermodalPath(G, newPath.first, initial_costs, costMultiplier);
+                increaseCostsFromIntermodalPath(G, newPathNodeIds, initial_costs, costMultiplier);
             }
             else
             {
-                increaseCostsFromPath(G, newPath.first, initial_costs, costMultiplier);
+                increaseCostsFromPath(G, newPathNodeIds, initial_costs, costMultiplier);
             }
         }
 
@@ -1042,7 +1034,23 @@ namespace hipop
     {
         std::vector<pathCost> A;
         std::vector<pathCost> B;
-        A.push_back(dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels));
+
+        auto bestPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
+        if (!bestPath) {
+            return A;
+        }
+
+        A.emplace_back(bestPath->first.nodeIds(), bestPath->second);
+
+        // Yen's shortest path algorithm is not applicable is origin == destination.
+        // This situation corresponds to an empty path being returned by the Dijkstra,
+        // so we stop here in this case.
+        if (bestPath->first.empty()) {
+            return A;
+        }
+
+        // At this point, the best path is guaranteed to exist and to not be reduced
+        // to an empty path (i.e. it has at least 1 link, and at least 2 nodes).
 
         double inf = std::numeric_limits<double>::infinity();
 
@@ -1076,17 +1084,27 @@ namespace hipop
                     }
                 }
 
-                pathCost spurPath = dijkstra(G, spurNode, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
-                pathCost totalPath;
-                totalPath.first = rootPath.first;
+                auto spurPath = dijkstra(G, spurNode, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
 
-                totalPath.first.insert(totalPath.first.end(), spurPath.first.begin() + 1, spurPath.first.end());
-                totalPath.second = rootPath.second + spurPath.second;
-
-                for (const auto &keyVal : initial_costs)
-                {
+                // Restore the initial costs
+                for (const auto &keyVal : initial_costs) {
                     G.mlinks[keyVal.first]->mcosts[keyVal.second.first][costMetric] = keyVal.second.second;
                 }
+
+                // Go to the next spur node if no spur path can be found from the current one.
+                if (!spurPath) {
+                    continue;
+                }
+
+                // Total path = root path + spur path.
+                // WARNING: the spur node appear in both paths (resp. at the end/beginning of the root/spur path),
+                // so one of these occurrency must be skipped when concatenating the paths.
+                pathCost totalPath;
+                totalPath.first = rootPath.first;
+                for (auto it = std::next(spurPath->first.nodes().begin()); it != spurPath->first.nodes().end(); ++it) {
+                    totalPath.first.emplace_back((*it)->mid);
+                }
+                totalPath.second = rootPath.second + spurPath->second;
 
                 bool toAdd = true;
                 for (const auto &prevPath : B)
@@ -1220,9 +1238,9 @@ namespace hipop
      * @param labelToCostFamily The cost family to use for each link label
      * @param accessibleLinkLabels The set of accessible link labels
      * @param heuristic An heuristic to speed up the shortest path computation
-     * @return pathCost The computed path
+     * @return Shortest path + the associated cost, or std::nullopt if destination cannot be reached from origin.
      */
-    pathCost aStar(
+    std::optional<PathCost> aStar(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -1237,22 +1255,17 @@ namespace hipop
         // FIXME This is mostly the same implementation as dijkstra(): in fact, dijkstra() is equivalent to A*
         // with a heuristic function that always returns 0. Could be refactored to avoid code duplication.
 
-        // Return a 0-node path with zero cost if origin and destination are identical.
-        // Remark: it would be more consistent with the general case to return 1-node path
-        // made of the single origin + destination node.
-        // Still, for compliance with legacy behavior, we return a 0-node path.
+        // Return an empty path (i.e. no link) with zero cost if origin and destination are identical.
         if (origin_node == destination_node) {
-            pathCost empty_path;
-            empty_path.second = 0;
-            return empty_path;
+            return PathCost{ OrientedGraphPath(origin_node), 0 };
         }
 
+        // TODO doc
         std::unordered_map<const Node*, double> dist; // No nullptr keys in this map.
-        std::unordered_map<const Node*, const Node*> prev; // No nullptr (neither as key nor as value) in this map.
+        std::unordered_map<const Node*, const Link*> prev; // No nullptr (neither as key nor as value) in this map.
         dist.reserve(G.mnodes.size());
         prev.reserve(G.mnodes.size());
         dist[origin_node] = 0;
-        // `prev[origin_node]` is intentionally left unset (the origin node has no predecessor).
 
         std::priority_queue<DijkstraQueueItem> pq;
         pq.emplace(DijkstraQueueItem{ heuristic(origin_node, destination_node), origin_node });
@@ -1264,17 +1277,18 @@ namespace hipop
             pq.pop();
 
             if (u == destination_node) {
-                pathCost path;
-                for (auto it = prev.find(u); it != prev.end(); it = prev.find(it->second)) {
-                    path.first.emplace_back(it->first->mid);
+                std::vector<const Link*> links;
+                const Node *v = destination_node;
+                while (v != origin_node) {
+                    const Link *link_to_v = prev.at(v);
+                    links.emplace_back(link_to_v);
+                    v = link_to_v->mup;
                 }
-                path.first.emplace_back(origin_node->mid);
-                std::reverse(path.first.begin(), path.first.end());
-                path.second = dist_u;
-                return path;
+                std::reverse(links.begin(), links.end());
+                return PathCost{ OrientedGraphPath(origin_node, std::move(links)), dist_u };
             }
 
-            u->forEachExit(u == origin_node ? "" : prev.at(u)->mid, [&](const Link *link) {
+            u->forEachExit(u == origin_node ? "" : prev.at(u)->mup->mid, [&](const Link *link) {
                 if (accessibleLinkLabels.empty() || accessibleLinkLabels.find(link->mlabel) != accessibleLinkLabels.end()) {
 
                     // The Dijkstra algorithm requires that all link costs are >= 0, and so does
@@ -1290,17 +1304,14 @@ namespace hipop
                     if (neighbor_it->second > new_dist) { // Follow the link only if it STRICTLY improves the distance.
                         neighbor_it->second = new_dist;
                         pq.emplace(DijkstraQueueItem{ new_dist + heuristic(neighbor, destination_node), neighbor });
-                        prev[neighbor] = u;
+                        prev[neighbor] = link;
                     }
                 }
             });
         }
 
-        // No path from origin to destination was found: return a 0-node path with infinite cost in this case.
-        // Remark: to make it more expicit, it would be better to return an optional<pathCost> instead.
-        pathCost invalid_path;
-        invalid_path.second = INFINITY;
-        return invalid_path;
+        // No path from origin to destination was found.
+        return std::nullopt;
     }
 
     /**
@@ -1312,9 +1323,9 @@ namespace hipop
      * @param costMetric The cost metric to consider in the shortest path algorithm
      * @param labelToCostFamily The cost family to use for each link label
      * @param accessibleLinkLabels The set of accessible link labels
-     * @return pathCost The computed path
+     * @return Shortest path + the associated cost, or std::nullopt if destination cannot be reached from origin.
      */
-    pathCost aStarEuclidianDist(
+    std::optional<PathCost> aStarEuclidianDist(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,

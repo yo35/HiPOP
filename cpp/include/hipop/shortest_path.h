@@ -1,17 +1,22 @@
-#include "hipop/graph.h"
-
-#include <vector>
-#include <string>
-#include <utility>
-#include <functional>
-
 #pragma once
 
+#include "hipop/graph.h"
+#include "hipop/graph_path.h"
+
+#include <functional>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+// TODO remove type aliases pathCost and ShortestPathsTree
 using pathCost = std::pair<std::vector<std::string>, double>;
 using ShortestPathsTree = std::unordered_map<std::string, std::string>;
 
-namespace hipop
-{
+namespace hipop {
+
     double computePathLength(OrientedGraph &G, const std::vector<std::string> &path);
 
     double computePathCost(OrientedGraph &G,
@@ -25,13 +30,14 @@ namespace hipop
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         int threadNumber);
 
-    pathCost dijkstra(
+    std::optional<PathCost> dijkstra(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
         const std::string &costMetric,
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         const setstring &accessibleLinkLabels = {});
+
     ShortestPathsTree dijkstraSingleSource(
         const OrientedGraph &G,
         const std::string &origin,
@@ -43,7 +49,8 @@ namespace hipop
         const std::string &costMetric,
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         const setstring &accessibleLinkLabels);
-    pathCost aStar(
+
+    std::optional<PathCost> aStar(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -51,7 +58,8 @@ namespace hipop
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         const setstring &accessibleLinkLabels,
         const std::function<double(const Node *, const Node *)> &heuristic);
-    pathCost aStarEuclidianDist(
+
+    std::optional<PathCost> aStarEuclidianDist(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
@@ -59,7 +67,7 @@ namespace hipop
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
         const setstring &accessibleLinkLabels);
 
-    std::vector<pathCost> parallelDijkstra(
+    std::vector<std::optional<PathCost>> parallelDijkstra(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
@@ -76,7 +84,7 @@ namespace hipop
         int threadNumber,
         const std::vector<setstring> &accessibleLinkLabels = {});
 
-    std::vector<pathCost> parallelDijkstraHeterogeneousCosts(
+    std::vector<std::optional<PathCost>> parallelDijkstraHeterogeneousCosts(
         const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
