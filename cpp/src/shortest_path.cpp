@@ -1,23 +1,15 @@
 #include "hipop/shortest_path.h"
 
-#include "hipop/graph.h"
 #include "hipop/string_util.h"
 
 #include <omp.h>
 
-#include <vector>
-#include <tuple>
-#include <queue>
-#include <unordered_map>
-#include <string>
-#include <numeric>
-#include <limits>
-#include <algorithm>
-#include <functional>
-#include <iostream>
-#include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <limits>
+#include <string>
 #include <string_view>
+#include <tuple>
 
 
 namespace { // Anonymous namespace
@@ -725,13 +717,27 @@ namespace hipop
         int kPath,
         bool intermodal)
     {
+        if (kPath <= 0) {
+            throw std::invalid_argument("[KShortestPath] kPath must be >= 1.");
+        }
+        if (maxRetry <= 0) {
+            throw std::invalid_argument("[KShortestPath] maxRetry must be >= 1.");
+        }
+
         std::vector<pathCost> paths;
 
         pathCost firstPath = dijkstra(G, origin, destination, costMetric, labelToCostFamily, accessibleLinkLabels);
         paths.push_back(firstPath);
 
-        if (firstPath.first.empty()) // no path found
-        {
+        // Stop here if any of these special cases occurs:
+        // 1) no path is found from origin to destination,
+        // 2) origin == destination,
+        // 3) only 1 path is requested by the caller (i.e. kPath == 1).
+        //
+        // FIXME 1) and 2) are covered by condition `firstPath.first.empty()`.
+        // Still, in case of 1), it would be better to return an empty container,
+        // to clearly indicate that there is no feasible path from origin to destination.
+        if (firstPath.first.empty() || kPath == 1) {
             return paths;
         }
 
@@ -759,10 +765,9 @@ namespace hipop
             increaseCostsFromPath(G, firstPath.first, labelToCostFamily, costMetric, overridenCosts, costMultiplier);
         }
 
-        int pathCounter = 1, retry = 0;
+        int retry = 0;
+        while (true) {
 
-        while (pathCounter < kPath && retry < maxRetry )
-        {
             pathCost newPath = dijkstraGeneric(G, origin, destination, overridenCostFunction, accessibleLinkLabels);
 
             // The path cost returned by Dijkstra is computed using the overriden costs,
@@ -797,11 +802,14 @@ namespace hipop
             {
                 paths.push_back(newPath);
                 retry = 0;
-                pathCounter += 1;
             }
             else
             {
                 retry += 1;
+            }
+
+            if (paths.size() == static_cast<unsigned int>(kPath) || retry == maxRetry) {
+                break; // The target number of paths is reached, or the maximum number of attempts.
             }
 
             if (intermodal)
