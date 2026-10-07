@@ -193,7 +193,7 @@ namespace hipop
         bool intermodal);
 
     std::vector<std::vector<pathCost>> parallelKShortestPath(
-        OrientedGraph &G,
+        const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
         const std::string &costMetric,

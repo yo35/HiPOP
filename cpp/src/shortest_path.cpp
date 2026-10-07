@@ -1020,7 +1020,7 @@ namespace hipop
      * @return std::vector<std::vector<pathCost>>
      */
     std::vector<std::vector<pathCost>> parallelKShortestPath(
-        OrientedGraph &G,
+        const OrientedGraph &G,
         const std::vector<std::string> &origins,
         const std::vector<std::string> &destinations,
         const std::string &costMetric,
@@ -1047,22 +1047,16 @@ namespace hipop
         // FIXME MSVC is still stuck to OpenMP 2.0, which requires **signed** loop variables for parallel for.
         std::int64_t nbUniqueIndices = uniqueIndices.size();
 
-        #pragma omp parallel shared(res, accessibleLinkLabels, G, labelToCostFamily, origins, destinations, kPaths)
-        {
-            OrientedGraph privateG = G;
-
-            #pragma omp for
-            for (std::int64_t i = 0; i < nbUniqueIndices; ++i)
+        #pragma omp parallel for shared(res, accessibleLinkLabels, G, labelToCostFamily, origins, destinations, kPaths)
+        for (std::int64_t i = 0; i < nbUniqueIndices; ++i) {
+            int uniqueIdx = uniqueIndices[i];
+            if (accessibleLinkLabels.empty())
             {
-                int uniqueIdx = uniqueIndices[i];
-                if (accessibleLinkLabels.empty())
-                {
-                    res[uniqueIdx] = KShortestPath(privateG, origins[uniqueIdx], destinations[uniqueIdx], costMetric, {}, labelToCostFamily[uniqueIdx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[uniqueIdx], false);
-                }
-                else
-                {
-                    res[uniqueIdx] = KShortestPath(privateG, origins[uniqueIdx], destinations[uniqueIdx], costMetric, accessibleLinkLabels[uniqueIdx], labelToCostFamily[uniqueIdx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[uniqueIdx], false);
-                }
+                res[uniqueIdx] = KShortestPath(G, origins[uniqueIdx], destinations[uniqueIdx], costMetric, {}, labelToCostFamily[uniqueIdx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[uniqueIdx], false);
+            }
+            else
+            {
+                res[uniqueIdx] = KShortestPath(G, origins[uniqueIdx], destinations[uniqueIdx], costMetric, accessibleLinkLabels[uniqueIdx], labelToCostFamily[uniqueIdx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[uniqueIdx], false);
             }
         }
 
@@ -1384,14 +1378,9 @@ namespace hipop
         // FIXME MSVC is still stuck to OpenMP 2.0, which requires **signed** loop variables for parallel for.
         std::int64_t nbUniqueIndices = uniqueIndices.size();
 
-        #pragma omp parallel shared(res, accessibleLinkLabels, labelToCostFamily, origins, destinationsTwin, kPaths, doubledG1, doubledG2)
+        #pragma omp parallel for shared(res, accessibleLinkLabels, labelToCostFamily, origins, destinationsTwin, kPaths, doubledG1, doubledG2)
+        for (std::int64_t i = 0; i < nbUniqueIndices; i++)
         {
-          OrientedGraph privateDoubledG1 = doubledG1;
-          OrientedGraph privateDoubledG2 = doubledG2;
-
-          #pragma omp for
-          for (std::int64_t i = 0; i < nbUniqueIndices; i++)
-          {
             int idx = uniqueIndices[i];
             std::vector<pathCost> resPath1;
             std::vector<pathCost> resPath2;
@@ -1399,14 +1388,14 @@ namespace hipop
             if (accessibleLinkLabels.empty())
             {
                 // Look for shortest paths on G1
-                resPath1 = KShortestPath(privateDoubledG1, origins[idx], destinationsTwin[idx], costMetric, {}, labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
+                resPath1 = KShortestPath(doubledG1, origins[idx], destinationsTwin[idx], costMetric, {}, labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
                 // Look for shortest paths on G2
-                resPath2 = KShortestPath(privateDoubledG2, origins[idx], destinationsTwin[idx], costMetric, {}, labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
+                resPath2 = KShortestPath(doubledG2, origins[idx], destinationsTwin[idx], costMetric, {}, labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
             }
             else
             {
-                resPath1 = KShortestPath(privateDoubledG1, origins[idx], destinationsTwin[idx], costMetric, accessibleLinkLabels[idx], labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
-                resPath2 = KShortestPath(privateDoubledG2, origins[idx], destinationsTwin[idx], costMetric, accessibleLinkLabels[idx], labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
+                resPath1 = KShortestPath(doubledG1, origins[idx], destinationsTwin[idx], costMetric, accessibleLinkLabels[idx], labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
+                resPath2 = KShortestPath(doubledG2, origins[idx], destinationsTwin[idx], costMetric, accessibleLinkLabels[idx], labelToCostFamily[idx], maxDiffCost, maxDistInCommon, costMultiplier, maxRetry, nbPaths[idx], true);
             }
             // Concat resPath1 and resPath2
             resPath1.insert(resPath1.end(), resPath2.begin(), resPath2.end());
@@ -1432,10 +1421,7 @@ namespace hipop
             {
                 res[idx] = resPath1;
             }
-
-
         }
-      }
 
       // Set shortest paths of duplicates
       for (const auto& elem : duplicateIndices)
