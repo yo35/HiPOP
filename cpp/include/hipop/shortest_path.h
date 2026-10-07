@@ -61,7 +61,8 @@ namespace hipop
      * @param costMetric Cost metric to consider.
      * @param labelToCostFamily Cost family to use for each link label.
      */
-    inline double computePathCost(const OrientedGraph &G,
+    inline double computePathCost(
+        const OrientedGraph &G,
         const std::vector<std::string> &path,
         const std::string &costMetric,
         const std::unordered_map<std::string, std::string> &labelToCostFamily)
@@ -72,7 +73,8 @@ namespace hipop
     }
 
 
-    std::vector<std::vector<double>> computePathsCosts(OrientedGraph &G,
+    std::vector<std::vector<double>> computePathsCosts(
+        const OrientedGraph &G,
         const std::vector<std::vector<std::vector<std::string>>> &paths,
         const std::string &costMetric,
         const std::unordered_map<std::string, std::string> &labelToCostFamily,

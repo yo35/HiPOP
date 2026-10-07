@@ -613,7 +613,7 @@ namespace hipop
      * @return std::vector<double> The total costs of the paths
      */
     std::vector<std::vector<double>> computePathsCosts(
-        OrientedGraph &G,
+        const OrientedGraph &G,
         const std::vector<std::vector<std::vector<std::string>>> &paths,
         const std::string &costMetric,
         const std::unordered_map<std::string, std::string> &labelToCostFamily,
@@ -624,21 +624,15 @@ namespace hipop
 
         std::vector<std::vector<double>> res(nbBatches);
 
-        #pragma omp parallel shared(res, G, paths, costMetric, labelToCostFamily)
-        {
-            OrientedGraph privateG = G;
-
-            #pragma omp for
-            for (int i = 0; i < nbBatches; i++)
+        #pragma omp parallel for shared(res, G, paths, costMetric, labelToCostFamily)
+        for (int i = 0; i < nbBatches; i++) {
+            int nbPaths = paths[i].size();
+            std::vector<double> res_(nbPaths);
+            for (int j = 0; j < nbPaths; j++)
             {
-                int nbPaths = paths[i].size();
-                std::vector<double> res_(nbPaths);
-                for (int j = 0; j < nbPaths; j++)
-                {
-                  res_[j] = computePathCost(privateG, paths[i][j], costMetric, labelToCostFamily);
-                }
-                res[i] = res_;
+                res_[j] = computePathCost(G, paths[i][j], costMetric, labelToCostFamily);
             }
+            res[i] = res_;
         }
 
         return res;
