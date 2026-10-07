@@ -1,5 +1,6 @@
-#include "hipop/graph.h"
 #include "hipop/shortest_path.h"
+
+#include "hipop/graph.h"
 #include "hipop/string_util.h"
 
 #include <omp.h>
@@ -116,23 +117,12 @@ namespace { // Anonymous namespace
 
 namespace hipop
 {
-    /**
-     * @brief Compute the shortest path between origin and destination using the Dijkstra algorithm
-     *
-     * @param G The OrientedGrah used for the shortest path
-     * @param origin The origin
-     * @param destination The destination
-     * @param costMetric The cost metric to consider in the shortest path algorithm
-     * @param labelToCostFamily The cost family to use for each link label (multiple cost families can be defined on a Link)
-     * @param accessibleLinkLabels The set of accessible link labels
-     * @return pathCost The list of Nodes defining the shortest path and the associated cost
-     */
-    pathCost dijkstra(
+
+    pathCost dijkstraGeneric(
         const OrientedGraph &G,
         const std::string &origin,
         const std::string &destination,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily,
+        const std::function<double(const Link *)> &costFunction,
         const setstring &accessibleLinkLabels)
     {
         const Node *origin_node = G.mnodes.at(origin);
@@ -183,7 +173,7 @@ namespace hipop
                     // However, having link costs equal to +infinity is allowed:
                     // the corresponding links are never visited.
 
-                    double cost_on_link = link->cost(labelToCostFamily.at(link->mlabel), costMetric);
+                    double cost_on_link = costFunction(link);
                     double new_dist = dist_u + cost_on_link;
                     const Node *neighbor = link->mdown;
 
@@ -673,26 +663,6 @@ namespace hipop
 
 
     /**
-     * @brief Compute the length of a path
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param path The path
-     * @return double The length of the path
-     */
-    double computePathLength(OrientedGraph &G, const std::vector<std::string> &path)
-    {
-        double length = 0;
-
-        for (size_t i = 0; i < path.size() - 1; i++)
-        {
-            Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
-            length += link->mlength;
-        }
-
-        return length;
-    }
-
-    /**
      * @brief Compute the relative distances in common between path and paths
      *
      * @param G The OrientedGraph
@@ -776,37 +746,6 @@ namespace hipop
         return res;
     }
 
-    /**
-     * @brief Compute the total cost of a path
-     *
-     * @param G The OrientedGraph on which the path is computed
-     * @param path The path
-     * @param costMetric The cost metric to consider
-     * @param labelToCostFamily The cost family to use for each link label
-     * @return double The total cost of the path
-     */
-    double computePathCost(
-        OrientedGraph &G,
-        const std::vector<std::string> &path,
-        const std::string &costMetric,
-        const std::unordered_map<std::string, std::string> &labelToCostFamily)
-    {
-        double c = 0;
-
-        if (path.size() == 0)
-        {
-          return c;
-        }
-        else
-        {
-          for (size_t i = 0; i < path.size() - 1; i++)
-          {
-              Link *link = G.mnodes[path[i]]->madj[path[i + 1]];
-              c += link->cost(labelToCostFamily.at(link->mlabel), costMetric);
-          }
-          return c;
-        }
-    }
 
     /**
      * @brief Compute the total cost of a path using map for effective cost on some links of the graph.
