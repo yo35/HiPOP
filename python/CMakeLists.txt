@@ -10,6 +10,9 @@ nanobind_add_module(cpp
     # (see https://docs.pypi.org/project-management/storage-limits/).
     NOMINSIZE
 
+    # Remark: configuration of interprocedural optimization (IPO/LTO) is handled
+    # by `hipop_configure_target(..)`, thus do not use the `LTO` parameter here.
+
     hipop/cpp/main.cpp
     hipop/cpp/graph.cpp
     hipop/cpp/shortest_path.cpp
