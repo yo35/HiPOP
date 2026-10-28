@@ -163,7 +163,14 @@ static void bind_graph_element_container_view(nb::module_ &m, const char *name) 
 
 void graph(nb::module_ &m) {
 
-    nb::class_<hipop::Link>(m, "Link")
+    nb::class_<hipop::Link>(m, "Link",
+        "Oriented link between two nodes of an OrientedGraph.\n"
+        "\n"
+        "WARNING: a Link object is a non-owning reference to data stored\n"
+        "in the OrientedGraph it belongs to. The graph must be kept alive\n"
+        "for as long as the link is used, and the link must not be removed\n"
+        "from it. Otherwise, accessing the link results in undefined behavior\n"
+        "(likely a crash).")
         .def_ro("id", &hipop::Link::mid)
         .def_prop_ro("upstream", [](const hipop::Link &link) { return link.mup->mid; })
         .def_prop_ro("downstream", [](const hipop::Link &link) { return link.mdown->mid; })
@@ -172,7 +179,14 @@ void graph(nb::module_ &m) {
         .def_ro("length", &hipop::Link::mlength)
         .def("update_costs", &hipop::Link::updateCosts, "costs"_a);
 
-    nb::class_<hipop::Node>(m, "Node")
+    nb::class_<hipop::Node>(m, "Node",
+        "Node of an OrientedGraph.\n"
+        "\n"
+        "WARNING: a Node object is a non-owning reference to data stored\n"
+        "in the OrientedGraph it belongs to. The graph must be kept alive\n"
+        "for as long as the node is used, and the node must not be removed\n"
+        "from it. Otherwise, accessing the node results in undefined behavior\n"
+        "(likely a crash).")
         .def_ro("id", &hipop::Node::mid)
         .def_ro("position", &hipop::Node::mposition)
         .def_ro("adj", &hipop::Node::madj)
