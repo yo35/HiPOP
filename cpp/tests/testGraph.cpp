@@ -345,6 +345,52 @@ static void test_AddLink() {
 }
 
 
+static void test_CopyConstructor() {
+
+    OrientedGraph G = makeGraph();
+
+    // Copy is deep, thus both instances are expected to be independent.
+    OrientedGraph copyG(G);
+    G.link("A_B")->updateCosts({{"CAR", {{"time", 42}}}});
+
+    assertTrue(
+        G.link("A_B")->mcosts.at("CAR").at("time") != copyG.link("A_B")->mcosts.at("CAR").at("time"),
+        "[CopyConstructor] Cost of original and copy should be different on link 'A_B'"
+    );
+    assertTrue(
+        G.link("B_C")->mcosts.at("BUS").at("time") == copyG.link("B_C")->mcosts.at("BUS").at("time"),
+        "[CopyConstructor] Cost of original and copy should be the same on link 'B_C'"
+    );
+    assertTrue(G.link("B_C") != copyG.link("B_C"), "[CopyConstructor] Links must be different objects");
+}
+
+
+// No Python equivalent: Python has no assignment operator.
+static void test_CopyAssignmentOperator() {
+
+    OrientedGraph G = makeGraph();
+
+    OrientedGraph copyG;
+    copyG.AddNode("Z", 0, 0);
+
+    // Assignment operator is expected to perform a deep copy as well,
+    // and also to erase the pre-existing content of the target instance.
+    copyG = G;
+    G.link("A_B")->updateCosts({{"CAR", {{"time", 42}}}});
+
+    assertTrue(!copyG.hasNode("Z"), "[CopyAssignmentOperator] Pre-existing node 'Z' should be erased by the copy");
+    assertTrue(
+        G.link("A_B")->mcosts.at("CAR").at("time") != copyG.link("A_B")->mcosts.at("CAR").at("time"),
+        "[CopyAssignmentOperator] Cost of original and copy should be different on link 'A_B'"
+    );
+    assertTrue(
+        G.link("B_C")->mcosts.at("BUS").at("time") == copyG.link("B_C")->mcosts.at("BUS").at("time"),
+        "[CopyAssignmentOperator] Cost of original and copy should be the same on link 'B_C'"
+    );
+    assertTrue(G.link("B_C") != copyG.link("B_C"), "[CopyAssignmentOperator] Links must be different objects");
+}
+
+
 static void test_GetLinksWithoutCost() {
 
     const OrientedGraph G = makeGraph();
@@ -447,6 +493,8 @@ int testGraph(int, char**) {
     test_LinkRanges();
     test_AddNode();
     test_AddLink();
+    test_CopyConstructor();
+    test_CopyAssignmentOperator();
     test_GetLinksWithoutCost();
     test_PointerStability();
     test_Exits();

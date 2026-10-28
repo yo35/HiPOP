@@ -6,7 +6,6 @@ from typing import TypedDict
 from hipop.cpp.graph import Link as Link
 from hipop.cpp.graph import Node as Node
 from hipop.cpp.graph import OrientedGraph as OrientedGraph
-from hipop.cpp.graph import copy_graph as copy_graph
 from hipop.cpp.graph import generate_manhattan as generate_manhattan
 from hipop.cpp.graph import merge_oriented_graph as merge_oriented_graph
 
