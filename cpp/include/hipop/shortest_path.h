@@ -12,6 +12,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -74,8 +75,8 @@ namespace hipop {
             "Cost function must have signature: double(const Link *link)"
         );
 
-        const Node *origin_node = G.mnodes.at(origin);
-        const Node *destination_node = G.mnodes.at(destination);
+        const Node *origin_node = G.node(origin);
+        const Node *destination_node = G.node(destination);
 
         // Return an empty path (i.e. no link) with zero cost if origin and destination are identical.
         if (origin_node == destination_node) {
@@ -87,8 +88,8 @@ namespace hipop {
         // No null pointers in these maps (neither as keys nor as values).
         std::unordered_map<const Node*, double> dist;
         std::unordered_map<const Node*, const Link*> prev;
-        dist.reserve(G.mnodes.size());
-        prev.reserve(G.mnodes.size());
+        dist.reserve(G.nodeCount());
+        prev.reserve(G.nodeCount());
         dist[origin_node] = 0;
 
         std::priority_queue<DijkstraQueueItem> pq;

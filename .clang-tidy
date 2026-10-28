@@ -6,6 +6,7 @@ WarningsAsErrors: '*'
 Checks: # See https://clang.llvm.org/extra/clang-tidy/checks/list.html
 
   - cppcoreguidelines-*
+  - misc-include-cleaner # The other misc-* are worth enabling, but that would mean significant code refactoring.
   - modernize-*
   - performance-*
 
@@ -23,11 +24,6 @@ Checks: # See https://clang.llvm.org/extra/clang-tidy/checks/list.html
   # the inputs and outputs of graph algorithm functions).
   - -cppcoreguidelines-narrowing-conversions
 
-  # FIXME Definitively worth enabling, but this would require to modify the graph data-structure
-  # (to use smart pointers to manage Node/Link allocations - or even better to allocate them in-place
-  # in the `mnodes`/`mlinks` maps), with impacts on the Python API. To be addressed in a dedicated change.
-  - -cppcoreguidelines-owning-memory
-
   # These checks require to use bounds-checked accessors on containers (e.g. `.at()` instead of `operator[]`).
   # Disabled because of the performance cost in hot loops, and because they raise false positives:
   # the index may be valid by the general logic of the algorithm, even if the checks can't deduce it.
@@ -41,3 +37,9 @@ Checks: # See https://clang.llvm.org/extra/clang-tidy/checks/list.html
   # - classic syntax: `int function_name(...) { ... }`
   # - trailing-return-type syntax: `auto function_name(...) -> int { ... }`
   - -modernize-use-trailing-return-type
+
+CheckOptions:
+
+  # The nanobind STL headers provide the C++ <-> Python type casters through template specializations:
+  # no symbol from them is referenced directly, but they must be included where the conversions happen.
+  misc-include-cleaner.IgnoreHeaders: 'nanobind/stl/.*'
