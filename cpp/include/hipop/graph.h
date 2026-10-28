@@ -437,14 +437,6 @@ namespace hipop
             return LinkRange(links_);
         }
 
-        [[nodiscard]] const Node *node(const std::string &nodeId) const {
-            return mnodes.at(nodeId);
-        }
-
-        [[nodiscard]] const Link *link(const std::string &linkId) const {
-            return mlinks.at(linkId);
-        }
-
         /**
          * Add all the nodes and links from `graph` to the current OrientedGraph.
          *

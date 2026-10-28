@@ -1,5 +1,6 @@
 #include <hipop/create.h>
 #include <hipop/graph.h>
+#include <hipop/graph_path.h>
 
 #include <nanobind/make_iterator.h>
 #include <nanobind/nanobind.h>
@@ -16,6 +17,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nb = nanobind;
 using namespace nb::literals;
