@@ -153,6 +153,67 @@ def test_link_ranges() -> None:
         G.links["Z"]
 
 
+def test_add_node() -> None:
+
+    G = _make_graph()
+    a = G.node("A")
+
+    G.add_node("E", 4, 4, "NewNode")
+    e = G.node("E")
+    assert G.node_count == 5, "node_count should be 5 after insertion"
+    assert e.id == "E" and e.position == [4, 4] and e.label == "NewNode", "node() should return the inserted node"
+
+    # Duplicated ID.
+    with pytest.raises(ValueError):
+        G.add_node("A", 5, 5, "Duplicate")
+    assert G.node_count == 5, "node_count should be unchanged after a failed insertion"
+    assert G.node("A") is a, "Existing node should not be replaced by a failed insertion"
+    assert a.position == [0, 0] and a.label == "", "Existing node should not be modified by a failed insertion"
+    assert list(a.adj) == ["B"] and a.adj["B"] is G.link("A_B"), (
+        "Links of the existing node should not be modified by a failed insertion"
+    )
+
+
+def test_add_link() -> None:
+
+    G = _make_graph()
+    ab = G.link("A_B")
+
+    G.add_link("C_D", "C", "D", 30, {"CAR": {"time": 3}}, "CarLayer")
+    cd = G.link("C_D")
+    assert G.link_count == 3, "link_count should be 3 after insertion"
+    assert cd.id == "C_D" and cd.upstream == "C" and cd.downstream == "D" and cd.length == 30, (
+        "link() should return the inserted link"
+    )
+    assert G.node("C").adj["D"] is cd and G.node("D").radj["C"] is cd, (
+        "Inserted link should be registered in the adjacency of its nodes"
+    )
+
+    # Duplicated ID.
+    with pytest.raises(ValueError):
+        G.add_link("A_B", "D", "A", 40, {"CAR": {"time": 4}}, "Duplicate")
+    assert G.link_count == 3, "link_count should be unchanged after a failed insertion"
+    assert G.link("A_B") is ab, "Existing link should not be replaced by a failed insertion"
+    assert ab.upstream == "A" and ab.downstream == "B" and ab.length == 10 and ab.label == "CarLayer", (
+        "Existing link should not be modified by a failed insertion"
+    )
+    assert len(G.node("D").adj) == 0 and len(G.node("A").radj) == 0, (
+        "Failed insertion should not modify the adjacency of the nodes"
+    )
+
+    # Unknown upstream/downstream node.
+    with pytest.raises(ValueError):
+        G.add_link("Z_A", "Z", "A", 50, {"CAR": {"time": 5}}, "CarLayer")
+    with pytest.raises(ValueError):
+        G.add_link("A_Z", "A", "Z", 50, {"CAR": {"time": 5}}, "CarLayer")
+    assert G.link_count == 3, "link_count should be unchanged after a failed insertion"
+    assert "Z_A" not in G.links and "A_Z" not in G.links, "Failed insertion should not add any link"
+    assert "Z" not in G.nodes, "Failed insertion should not add any node"
+    assert len(G.node("A").adj) == 1 and len(G.node("A").radj) == 0, (
+        "Failed insertion should not modify the adjacency of the nodes"
+    )
+
+
 def test_exits() -> None:
 
     G = OrientedGraph()
