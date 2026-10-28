@@ -51,6 +51,21 @@ namespace hipop
         ~Link() = default;
 
         /**
+         * Whether a cost value is set for the current link, assuming the given cost family and cost metric.
+         */
+        [[nodiscard]] bool hasCost(const std::string &costFamily, const std::string &costMetric) const {
+            auto it1 = mcosts.find(costFamily);
+            if (it1 == mcosts.end()) {
+                return false;
+            }
+            auto it2 = it1->second.find(costMetric);
+            if (it2 == it1->second.end()) {
+                return false;
+            }
+            return true;
+        }
+
+        /**
          * Read the cost value associated to the current link, assuming the given cost family and cost metric.
          *
          * @return 0 if no cost value is explicitly set for the given cost family and/or cost metric.
@@ -452,7 +467,12 @@ namespace hipop
         void UpdateLinkCosts(const std::string &linkId, mapcosts costs);
         void UpdateCosts(const std::unordered_map<std::string, mapcosts> &linkIdToCosts);
         double getLength(const std::string &up, const std::string &down);
-        std::vector<std::string> GetLinksWithoutCost(const std::string &costMetric, const std::unordered_map<std::string, std::string> &labelToCostFamily);
+
+        /**
+         * Return the IDs of the links for which the considered cost has not been set.
+         */
+        std::vector<std::string> GetLinksWithoutCost(const std::string &costMetric,
+            const std::unordered_map<std::string, std::string> &labelToCostFamily) const;
 
         void ShowNodes();
         void ShowLinks();

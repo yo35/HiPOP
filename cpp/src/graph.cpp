@@ -196,22 +196,18 @@ namespace hipop
         return newGraph;
     }
 
-    /**
-     * @brief Return links for which the considered cost has not been set
-     *
-     * @param costMetric The cost metric to consider
-     * @param labelToCostFamily The cost family to use for each link label
-     * @return std::vector<std::string> The list of links with no cost
-     */
-    std::vector<std::string> OrientedGraph::GetLinksWithoutCost(const std::string &costMetric, const std::unordered_map<std::string, std::string> &labelToCostFamily)
-    {
-        std::vector<std::string> links;
-        for(auto &elem: links_)
-        {
-            if ( elem.second.mcosts[labelToCostFamily.at(elem.second.mlabel)].find(costMetric) == elem.second.mcosts[labelToCostFamily.at(elem.second.mlabel)].end() )
-                links.push_back(elem.first);
-        }
 
-        return links;
+    std::vector<std::string> OrientedGraph::GetLinksWithoutCost(const std::string &costMetric,
+        const std::unordered_map<std::string, std::string> &labelToCostFamily) const {
+
+        std::vector<std::string> result;
+        for (const Link *link : links()) {
+            if (!link->hasCost(labelToCostFamily.at(link->mlabel), costMetric)) {
+                result.emplace_back(link->mid);
+            }
+        }
+        return result;
     }
+
+
 } // namespace hipop
