@@ -30,6 +30,18 @@ struct NodeMapping {
     using Element = hipop::Node;
     using Iterator = hipop::OrientedGraph::NodeIterator;
 
+    static constexpr const char *doc =
+        "Read-only, dictionary-like view of the nodes of an OrientedGraph, indexed by node ID.\n"
+        "\n"
+        "WARNINGS:\n"
+        "- The view reflects the current state of the graph. Adding or removing nodes\n"
+        "  while iterating over the view (or over its keys/values/items) results in undefined\n"
+        "  behavior (likely a crash).\n"
+        "- The Node objects returned by the view are non-owning references to data stored\n"
+        "  in the OrientedGraph. The graph must be kept alive for as long as they are used, and they\n"
+        "  must not be removed from it. Otherwise, accessing them results in undefined behavior\n"
+        "  (likely a crash).";
+
     struct KeyView { hipop::OrientedGraph *graph; };
     struct ValueView { hipop::OrientedGraph *graph; };
     struct ItemView { hipop::OrientedGraph *graph; };
@@ -49,6 +61,18 @@ struct LinkMapping {
 
     using Element = hipop::Link;
     using Iterator = hipop::OrientedGraph::LinkIterator;
+
+    static constexpr const char *doc =
+        "Read-only, dictionary-like view of the links of an OrientedGraph, indexed by link ID.\n"
+        "\n"
+        "WARNINGS:\n"
+        "- The view reflects the current state of the graph. Adding or removing links\n"
+        "  (or nodes) while iterating over the view (or over its keys/values/items) results in\n"
+        "  undefined behavior (likely a crash).\n"
+        "- The Link objects returned by the view are non-owning references to data stored\n"
+        "  in the OrientedGraph. The graph must be kept alive for as long as they are used, and they\n"
+        "  must not be removed from it. Otherwise, accessing them results in undefined behavior\n"
+        "  (likely a crash).";
 
     struct KeyView { hipop::OrientedGraph *graph; };
     struct ValueView { hipop::OrientedGraph *graph; };
@@ -123,7 +147,7 @@ static void bind_graph_element_mapping(nb::module_ &m, const char *name) {
         }
     };
 
-    nb::class_<Mapping> mappingClass(m, name);
+    nb::class_<Mapping> mappingClass(m, name, Mapping::doc);
 
     nb::class_<KeyView>(mappingClass, "KeyView")
         .def("__len__", [](const KeyView &v) { return Mapping::count(*v.graph); })
