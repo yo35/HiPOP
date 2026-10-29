@@ -23,16 +23,16 @@ namespace hipop_wrappers {
 
 
 /**
- * Adaptator class, to make a OrientedGraph class look like a container of Node.
+ * Adapter class, to make an OrientedGraph class look like a container of `Node` objects.
  */
-struct NodeContainerView {
+struct NodeMapping {
 
     using Element = hipop::Node;
     using Iterator = hipop::OrientedGraph::NodeIterator;
 
-    struct KeySubview { hipop::OrientedGraph *graph; };
-    struct ValueSubview { hipop::OrientedGraph *graph; };
-    struct ItemSubview { hipop::OrientedGraph *graph; };
+    struct KeyView { hipop::OrientedGraph *graph; };
+    struct ValueView { hipop::OrientedGraph *graph; };
+    struct ItemView { hipop::OrientedGraph *graph; };
 
     hipop::OrientedGraph *graph; // never null
 
@@ -43,16 +43,16 @@ struct NodeContainerView {
 
 
 /**
- * Adaptator class, to make a OrientedGraph class look like a container of Link.
+ * Adapter class, to make an OrientedGraph class look like a container of `Link` objects.
  */
-struct LinkContainerView {
+struct LinkMapping {
 
     using Element = hipop::Link;
     using Iterator = hipop::OrientedGraph::LinkIterator;
 
-    struct KeySubview { hipop::OrientedGraph *graph; };
-    struct ValueSubview { hipop::OrientedGraph *graph; };
-    struct ItemSubview { hipop::OrientedGraph *graph; };
+    struct KeyView { hipop::OrientedGraph *graph; };
+    struct ValueView { hipop::OrientedGraph *graph; };
+    struct ItemView { hipop::OrientedGraph *graph; };
 
     hipop::OrientedGraph *graph; // never null
 
@@ -65,16 +65,16 @@ struct LinkContainerView {
 /**
  * Python iterator over the given projection of the elements of the graph.
  */
-template<typename View, typename Projection, nb::rv_policy::value RVPolicy = nb::rv_policy::automatic_reference_v>
+template<typename Mapping, typename Projection, nb::rv_policy::value RVPolicy = nb::rv_policy::automatic_reference_v>
 static auto make_projecting_iterator(hipop::OrientedGraph &graph, const char *name) {
 
     class ProjectingIterator {
 
-        typename View::Iterator it_;
+        typename Mapping::Iterator it_;
 
     public:
 
-        explicit ProjectingIterator(typename View::Iterator it) : it_(it) {}
+        explicit ProjectingIterator(typename Mapping::Iterator it) : it_(it) {}
 
         [[nodiscard]] decltype(auto) operator*() const { return Projection{}(*it_); }
 
@@ -87,26 +87,27 @@ static auto make_projecting_iterator(hipop::OrientedGraph &graph, const char *na
         [[nodiscard]] bool operator!=(const ProjectingIterator &other) const { return it_ != other.it_; }
     };
 
-    auto range = View::range(graph);
+    auto range = Mapping::range(graph);
     return nb::make_iterator<RVPolicy>(
-        nb::type<View>(), name, ProjectingIterator(range.begin()), ProjectingIterator(range.end()));
+        nb::type<Mapping>(), name, ProjectingIterator(range.begin()), ProjectingIterator(range.end()));
 }
 
 
 /**
- * Register the Python class `name` corresponding to `View` (`NodeContainerView` or `LinkContainerView`).
+ * Register the Python class `name` corresponding to `Mapping` (`NodeMapping` or `LinkMapping`).
  *
- * Remark: the view is dict-like, but it is on purpose NOT registered as a `collections.abc.Mapping`,
- * as it does not implement the whole contract: `get()` does not accept a default value,
- * and `__eq__` is not implemented (equality is identity).
+ * Remark: the API exposed to the Python world for the `Mapping` class is dictionary-like.
+ * Still, it is not fully compliant with the `collections.abc.Mapping` contract:
+ *  - `get()` does not accept a default value,
+ *  - `__eq__` is not implemented (equality is identity).
  */
-template<typename View>
-static void bind_graph_element_container_view(nb::module_ &m, const char *name) {
+template<typename Mapping>
+static void bind_graph_element_mapping(nb::module_ &m, const char *name) {
 
-    using Element = typename View::Element;
-    using KeySubview = typename View::KeySubview;
-    using ValueSubview = typename View::ValueSubview;
-    using ItemSubview = typename View::ItemSubview;
+    using Element = typename Mapping::Element;
+    using KeyView = typename Mapping::KeyView;
+    using ValueView = typename Mapping::ValueView;
+    using ItemView = typename Mapping::ItemView;
 
     // Auxiliary classes for the .keys() / .items() iterators
     // Remark: no projection is needed for the .values() iterator, as its value-type corresponds
@@ -122,52 +123,52 @@ static void bind_graph_element_container_view(nb::module_ &m, const char *name) 
         }
     };
 
-    nb::class_<View> viewClass(m, name);
+    nb::class_<Mapping> mappingClass(m, name);
 
-    nb::class_<KeySubview>(viewClass, "KeySubview")
-        .def("__len__", [](const KeySubview &v) { return View::count(*v.graph); })
-        .def("__contains__", [](const KeySubview &v, const std::string &id) {
-            return View::find(*v.graph, id) != nullptr;
+    nb::class_<KeyView>(mappingClass, "KeyView")
+        .def("__len__", [](const KeyView &v) { return Mapping::count(*v.graph); })
+        .def("__contains__", [](const KeyView &v, const std::string &id) {
+            return Mapping::find(*v.graph, id) != nullptr;
         })
-        .def("__iter__", [](const KeySubview &v) {
-            return make_projecting_iterator<View, KeyProjection>(*v.graph, "KeyIterator");
+        .def("__iter__", [](const KeyView &v) {
+            return make_projecting_iterator<Mapping, KeyProjection>(*v.graph, "KeyIterator");
         }, nb::keep_alive<0, 1>());
 
-    nb::class_<ValueSubview>(viewClass, "ValueSubview")
-        .def("__len__", [](const ValueSubview &v) { return View::count(*v.graph); })
-        .def("__iter__", [](const ValueSubview &v) {
-            auto range = View::range(*v.graph);
-            return nb::make_iterator<nb::rv_policy::reference>(nb::type<View>(), "ValueIterator", range.begin(), range.end());
+    nb::class_<ValueView>(mappingClass, "ValueView")
+        .def("__len__", [](const ValueView &v) { return Mapping::count(*v.graph); })
+        .def("__iter__", [](const ValueView &v) {
+            auto range = Mapping::range(*v.graph);
+            return nb::make_iterator<nb::rv_policy::reference>(nb::type<Mapping>(), "ValueIterator", range.begin(), range.end());
         }, nb::keep_alive<0, 1>());
 
-    nb::class_<ItemSubview>(viewClass, "ItemSubview")
-        .def("__len__", [](const ItemSubview &v) { return View::count(*v.graph); })
-        .def("__iter__", [](const ItemSubview &v) {
-            return make_projecting_iterator<View, ItemProjection, nb::rv_policy::reference>(*v.graph, "ItemIterator");
+    nb::class_<ItemView>(mappingClass, "ItemView")
+        .def("__len__", [](const ItemView &v) { return Mapping::count(*v.graph); })
+        .def("__iter__", [](const ItemView &v) {
+            return make_projecting_iterator<Mapping, ItemProjection, nb::rv_policy::reference>(*v.graph, "ItemIterator");
         }, nb::keep_alive<0, 1>());
 
-    viewClass
-        .def("__len__", [](const View &v) { return View::count(*v.graph); })
-        .def("__contains__", [](const View &v, const std::string &id) {
-            return View::find(*v.graph, id) != nullptr;
+    mappingClass
+        .def("__len__", [](const Mapping &v) { return Mapping::count(*v.graph); })
+        .def("__contains__", [](const Mapping &v, const std::string &id) {
+            return Mapping::find(*v.graph, id) != nullptr;
         })
-        .def("__getitem__", [](const View &v, const std::string &id) {
-            Element *element = View::find(*v.graph, id);
+        .def("__getitem__", [](const Mapping &v, const std::string &id) {
+            Element *element = Mapping::find(*v.graph, id);
             if (element == nullptr) {
                 throw nb::key_error();
             }
             return element;
         }, "id"_a, nb::rv_policy::reference)
-        .def("get", [](const View &v, const std::string &id) {
-            Element *element = View::find(*v.graph, id);
+        .def("get", [](const Mapping &v, const std::string &id) {
+            Element *element = Mapping::find(*v.graph, id);
             return element == nullptr ? std::nullopt : std::make_optional(element);
         }, "id"_a, nb::rv_policy::reference)
-        .def("__iter__", [](const View &v) {
-            return make_projecting_iterator<View, KeyProjection>(*v.graph, "KeyIterator");
+        .def("__iter__", [](const Mapping &v) {
+            return make_projecting_iterator<Mapping, KeyProjection>(*v.graph, "KeyIterator");
         }, nb::keep_alive<0, 1>())
-        .def("keys", [](const View &v) { return KeySubview{ v.graph }; }, nb::keep_alive<0, 1>())
-        .def("values", [](const View &v) { return ValueSubview{ v.graph }; }, nb::keep_alive<0, 1>())
-        .def("items", [](const View &v) { return ItemSubview{ v.graph }; }, nb::keep_alive<0, 1>());
+        .def("keys", [](const Mapping &v) { return KeyView{ v.graph }; }, nb::keep_alive<0, 1>())
+        .def("values", [](const Mapping &v) { return ValueView{ v.graph }; }, nb::keep_alive<0, 1>())
+        .def("items", [](const Mapping &v) { return ItemView{ v.graph }; }, nb::keep_alive<0, 1>());
 }
 
 
@@ -205,8 +206,8 @@ void graph(nb::module_ &m) {
         .def_ro("exclude_movements", &hipop::Node::mexclude_movements)
         .def("get_exits", &hipop::Node::getExits, "predecessor"_a, nb::rv_policy::reference);
 
-    bind_graph_element_container_view<NodeContainerView>(m, "NodeMap");
-    bind_graph_element_container_view<LinkContainerView>(m, "LinkMap");
+    bind_graph_element_mapping<NodeMapping>(m, "NodeMap");
+    bind_graph_element_mapping<LinkMapping>(m, "LinkMap");
 
     nb::class_<hipop::OrientedGraph>(m, "OrientedGraph")
         .def(nb::init<>())
@@ -215,10 +216,10 @@ void graph(nb::module_ &m) {
         // Remark: on the Python side, nodes and links are accessed only through the read-only mapping views
         // returned by `nodes` and `links`, the other C++ accessors (`node()`, `findNode()`, etc.) are not exposed.
         .def_prop_ro("nodes", [](hipop::OrientedGraph &graph) {
-            return NodeContainerView{ &graph };
+            return NodeMapping{ &graph };
         }, nb::keep_alive<0, 1>())
         .def_prop_ro("links", [](hipop::OrientedGraph &graph) {
-            return LinkContainerView{ &graph };
+            return LinkMapping{ &graph };
         }, nb::keep_alive<0, 1>())
 
         // Copy
