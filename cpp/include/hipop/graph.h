@@ -471,7 +471,7 @@ namespace hipop
         /**
          * Return the IDs of the links for which the considered cost has not been set.
          */
-        std::vector<std::string> GetLinksWithoutCost(const std::string &costMetric,
+        [[nodiscard]] std::vector<std::string> GetLinksWithoutCost(const std::string &costMetric,
             const std::unordered_map<std::string, std::string> &labelToCostFamily) const;
 
         void ShowNodes() const;
