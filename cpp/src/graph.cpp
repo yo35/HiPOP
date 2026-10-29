@@ -28,8 +28,7 @@ namespace hipop
 
 
     void OrientedGraph::AddAllNodesAndLinks(const OrientedGraph &graph) {
-        for (const auto &it : graph.nodes_) {
-            const Node *otherNode = &it.second;
+        for (const Node *otherNode : graph.nodes()) {
             AddNode(
                 otherNode->mid,
                 otherNode->mposition[0],
@@ -38,8 +37,7 @@ namespace hipop
                 otherNode->mexclude_movements
             );
         }
-        for (const auto &it : graph.links_) {
-            const Link *otherLink = &it.second;
+        for (const Link *otherLink : graph.links()) {
             AddLink(
                 otherLink->mid,
                 otherLink->mup->mid,
@@ -160,7 +158,7 @@ namespace hipop
      *
      */
     void OrientedGraph::ShowNodes() {
-        for(const auto &elem: nodes_) {
+        for (const auto &elem: nodes_) {
             std::cout << "Node(" << elem.first << ", [" << elem.second.mposition[0] << ",\t" << elem.second.mposition[1] << "])\n";
         }
     }
