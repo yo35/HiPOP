@@ -153,23 +153,15 @@ namespace hipop
         }
     }
 
-    /**
-     * @brief Print the Nodes informations
-     *
-     */
-    void OrientedGraph::ShowNodes() {
-        for (const auto &elem: nodes_) {
-            std::cout << "Node(" << elem.first << ", [" << elem.second.mposition[0] << ",\t" << elem.second.mposition[1] << "])\n";
+    void OrientedGraph::ShowNodes() const {
+        for (const Node *node : nodes()) {
+            std::cout << "Node(" << node->mid << ", [" << node->mposition[0] << ",\t" << node->mposition[1] << "])\n";
         }
     }
 
-    /**
-     * @brief Print the Link informations
-     *
-     */
-    void OrientedGraph::ShowLinks() {
-        for(const auto &elem: links_) {
-            std::cout << "Link(" << elem.first << ", " << elem.second.mup->mid << ", " << elem.second.mdown->mid << ")\n";
+    void OrientedGraph::ShowLinks() const {
+        for (const Link *link : links()) {
+            std::cout << "Link(" << link->mid << ", " << link->mup->mid << ", " << link->mdown->mid << ")\n";
         }
     }
 

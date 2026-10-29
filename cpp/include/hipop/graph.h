@@ -474,8 +474,8 @@ namespace hipop
         std::vector<std::string> GetLinksWithoutCost(const std::string &costMetric,
             const std::unordered_map<std::string, std::string> &labelToCostFamily) const;
 
-        void ShowNodes();
-        void ShowLinks();
+        void ShowNodes() const;
+        void ShowLinks() const;
 
         OrientedGraph() = default;
         OrientedGraph(const OrientedGraph &other);
