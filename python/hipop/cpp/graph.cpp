@@ -179,7 +179,7 @@ static void bind_graph_element_mapping(nb::module_ &m, const char *name) {
         .def("__getitem__", [](const Mapping &v, const std::string &id) {
             Element *element = Mapping::find(*v.graph, id);
             if (element == nullptr) {
-                throw nb::key_error();
+                throw nb::key_error(id.c_str());
             }
             return element;
         }, "id"_a, nb::rv_policy::reference)

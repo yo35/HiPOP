@@ -37,9 +37,9 @@ def test_empty_graph() -> None:
     assert "A_B" not in G.links, "`in G.links` should be false"
     assert G.nodes.get("A") is None, "G.nodes.get() should return None"
     assert G.links.get("A_B") is None, "G.links.get() should return None"
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'A'$"):
         G.nodes["A"]
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'A_B'$"):
         G.links["A_B"]
 
     assert list(G.nodes) == [], "Node view should be empty"
@@ -58,7 +58,7 @@ def test_node_accessors() -> None:
     a = G.nodes["A"]
     assert a.id == "A" and a.position == [0, 0], "G.nodes[...] should return node 'A'"
     assert G.nodes["A"] is a, "G.nodes[...] should always return the same node"
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'Z'$"):
         G.nodes["Z"]
 
     # G.nodes.get()
@@ -70,7 +70,7 @@ def test_node_accessors() -> None:
     assert len(G.nodes) == 3, "Node view should have 3 elements after deletion"
     assert "B" not in G.nodes, "`in G.nodes` should be false after deletion"
     assert G.nodes.get("B") is None, "G.nodes.get() should return None after deletion"
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'B'$"):
         G.nodes["B"]
     assert sorted(G.nodes) == ["A", "C", "D"], "View should not contain deleted node"
 
@@ -88,7 +88,7 @@ def test_link_accessors() -> None:
     assert ab.id == "A_B" and ab.label == "CarLayer" and ab.length == 10, "G.links[...] should return link 'A_B'"
     assert ab.upstream == "A" and ab.downstream == "B", "Link 'A_B' should go from 'A' to 'B'"
     assert G.links["A_B"] is ab, "G.links[...] should always return the same link"
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'Z'$"):
         G.links["Z"]
 
     # G.links.get()
@@ -108,7 +108,7 @@ def test_link_accessors() -> None:
     assert len(G.links) == 1, "Link view should have 1 element after deletion"
     assert "A_B" not in G.links, "`in G.links` should be false after deletion"
     assert G.links.get("A_B") is None, "G.links.get() should return None after deletion"
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="^'A_B'$"):
         G.links["A_B"]
     assert list(G.links) == ["B_C"], "View should not contain deleted link"
 
