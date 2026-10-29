@@ -35,6 +35,8 @@ def test_empty_graph() -> None:
     assert G.link_count == 0, "link_count should be 0"
     assert "A" not in G.nodes, "`in G.nodes` should be false"
     assert "A_B" not in G.links, "`in G.links` should be false"
+    assert not G.has_node("A"), "has_node() should return False"
+    assert not G.has_link("A_B"), "has_link() should return False"
     assert G.find_node("A") is None, "find_node() should return None"
     assert G.find_link("A_B") is None, "find_link() should return None"
     with pytest.raises(ValueError):
@@ -53,6 +55,8 @@ def test_node_accessors() -> None:
     assert G.node_count == 4, "node_count should be 4"
     assert "A" in G.nodes and "D" in G.nodes, "`in G.nodes` should be true for existing nodes"
     assert "Z" not in G.nodes, "`in G.nodes` should be false for unknown nodes"
+    assert G.has_node("A") and G.has_node("D"), "has_node() should return True for existing nodes"
+    assert not G.has_node("Z"), "has_node() should return False for unknown nodes"
 
     # node()
     a = G.node("A")
@@ -69,6 +73,7 @@ def test_node_accessors() -> None:
     G.delete_node("B")
     assert G.node_count == 3, "node_count should be 3 after deletion"
     assert "B" not in G.nodes, "`in G.nodes` should be false after deletion"
+    assert not G.has_node("B"), "has_node() should return False after deletion"
     assert G.find_node("B") is None, "find_node() should return None after deletion"
     with pytest.raises(ValueError):
         G.node("B")
@@ -82,6 +87,8 @@ def test_link_accessors() -> None:
     assert G.link_count == 2, "link_count should be 2"
     assert "A_B" in G.links and "B_C" in G.links, "`in G.links` should be true for existing links"
     assert "Z" not in G.links, "`in G.links` should be false for unknown links"
+    assert G.has_link("A_B") and G.has_link("B_C"), "has_link() should return True for existing links"
+    assert not G.has_link("Z"), "has_link() should return False for unknown links"
 
     # link()
     ab = G.link("A_B")
@@ -107,6 +114,7 @@ def test_link_accessors() -> None:
     G.delete_link("A_B")
     assert G.link_count == 1, "link_count should be 1 after deletion"
     assert "A_B" not in G.links, "`in G.links` should be false after deletion"
+    assert not G.has_link("A_B"), "has_link() should return False after deletion"
     assert G.find_link("A_B") is None, "find_link() should return None after deletion"
     with pytest.raises(ValueError):
         G.link("A_B")

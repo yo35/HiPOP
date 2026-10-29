@@ -203,6 +203,7 @@ void graph(nb::module_ &m) {
 
         // Node accessors
         .def_prop_ro("node_count", &hipop::OrientedGraph::nodeCount)
+        .def("has_node", &hipop::OrientedGraph::hasNode, "node_id"_a)
         .def("node", [](hipop::OrientedGraph &graph, const std::string &nodeId) {
             return graph.node(nodeId);
         }, "node_id"_a, nb::rv_policy::reference)
@@ -215,6 +216,7 @@ void graph(nb::module_ &m) {
 
         // Link accessors
         .def_prop_ro("link_count", &hipop::OrientedGraph::linkCount)
+        .def("has_link", &hipop::OrientedGraph::hasLink, "link_id"_a)
         .def("link", [](hipop::OrientedGraph &graph, const std::string &linkId) {
             return graph.link(linkId);
         }, "link_id"_a, nb::rv_policy::reference)
