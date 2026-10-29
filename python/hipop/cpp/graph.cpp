@@ -4,6 +4,7 @@
 #include <nanobind/make_iterator.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/array.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/pair.h>
 #include <nanobind/stl/set.h>
 #include <nanobind/stl/string.h>
@@ -11,6 +12,7 @@
 #include <nanobind/stl/vector.h>
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -93,6 +95,10 @@ static auto make_projecting_iterator(hipop::OrientedGraph &graph, const char *na
 
 /**
  * Register the Python class `name` corresponding to `View` (`NodeContainerView` or `LinkContainerView`).
+ *
+ * Remark: the view is dict-like, but it is on purpose NOT registered as a `collections.abc.Mapping`,
+ * as it does not implement the whole contract: `get()` does not accept a default value,
+ * and `__eq__` is not implemented (equality is identity).
  */
 template<typename View>
 static void bind_graph_element_container_view(nb::module_ &m, const char *name) {
@@ -152,6 +158,10 @@ static void bind_graph_element_container_view(nb::module_ &m, const char *name) 
             }
             return element;
         }, "id"_a, nb::rv_policy::reference)
+        .def("get", [](const View &v, const std::string &id) {
+            Element *element = View::find(*v.graph, id);
+            return element == nullptr ? std::nullopt : std::make_optional(element);
+        }, "id"_a, nb::rv_policy::reference)
         .def("__iter__", [](const View &v) {
             return make_projecting_iterator<View, KeyProjection>(*v.graph, "KeyIterator");
         }, nb::keep_alive<0, 1>())
@@ -201,33 +211,17 @@ void graph(nb::module_ &m) {
     nb::class_<hipop::OrientedGraph>(m, "OrientedGraph")
         .def(nb::init<>())
 
-        // Node accessors
-        .def_prop_ro("node_count", &hipop::OrientedGraph::nodeCount)
-        .def("has_node", &hipop::OrientedGraph::hasNode, "node_id"_a)
-        .def("node", [](hipop::OrientedGraph &graph, const std::string &nodeId) {
-            return graph.node(nodeId);
-        }, "node_id"_a, nb::rv_policy::reference)
-        .def("find_node", [](hipop::OrientedGraph &graph, const std::string &nodeId) {
-            return graph.findNode(nodeId);
-        }, "node_id"_a, nb::rv_policy::reference, nb::sig("def find_node(self, node_id: str) -> Node | None"))
+        // Node/link accessors
+        // Remark: on the Python side, nodes and links are accessed only through the read-only mapping views
+        // returned by `nodes` and `links`, the other C++ accessors (`node()`, `findNode()`, etc.) are not exposed.
         .def_prop_ro("nodes", [](hipop::OrientedGraph &graph) {
             return NodeContainerView{ &graph };
         }, nb::keep_alive<0, 1>())
-
-        // Link accessors
-        .def_prop_ro("link_count", &hipop::OrientedGraph::linkCount)
-        .def("has_link", &hipop::OrientedGraph::hasLink, "link_id"_a)
-        .def("link", [](hipop::OrientedGraph &graph, const std::string &linkId) {
-            return graph.link(linkId);
-        }, "link_id"_a, nb::rv_policy::reference)
-        .def("find_link", [](hipop::OrientedGraph &graph, const std::string &linkId) {
-            return graph.findLink(linkId);
-        }, "link_id"_a, nb::rv_policy::reference, nb::sig("def find_link(self, link_id: str) -> Link | None"))
         .def_prop_ro("links", [](hipop::OrientedGraph &graph) {
             return LinkContainerView{ &graph };
         }, nb::keep_alive<0, 1>())
 
-        // Other operations
+        // Copy
         .def("copy", [](const hipop::OrientedGraph &graph) {
             return hipop::OrientedGraph(graph);
         })
@@ -239,6 +233,8 @@ void graph(nb::module_ &m) {
             // so copying the graph always copies them: thus, __copy__ and __deepcopy__ behave identically.
             return hipop::OrientedGraph(graph);
         }, "memo"_a)
+
+        // Other operations
         .def("add_all_nodes_and_links", &hipop::OrientedGraph::AddAllNodesAndLinks, "graph"_a)
         .def("add_node", &hipop::OrientedGraph::AddNode,
             "node_id"_a, "x"_a, "y"_a, "label"_a, "exclude_movements"_a = mapsets())
