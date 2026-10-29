@@ -2,6 +2,9 @@
 # that have no equivalent between the C++ and Python APIs.
 # WARNING: any modification in this file should be reflected in the C++ test as well.
 
+import copy
+from collections.abc import Callable
+
 import pytest
 
 from hipop.graph import OrientedGraph
@@ -61,6 +64,15 @@ def test_node_accessors() -> None:
     # find_node()
     assert G.find_node("A") is a, "find_node() should return node 'A'"
     assert G.find_node("Z") is None, "find_node() should return None for unknown nodes"
+
+    # Accessors must stay consistent after a deletion.
+    G.delete_node("B")
+    assert G.node_count == 3, "node_count should be 3 after deletion"
+    assert "B" not in G.nodes, "`in G.nodes` should be false after deletion"
+    assert G.find_node("B") is None, "find_node() should return None after deletion"
+    with pytest.raises(ValueError):
+        G.node("B")
+    assert sorted(G.nodes) == ["A", "C", "D"], "View should not contain deleted node"
 
 
 def test_link_accessors() -> None:
@@ -212,6 +224,106 @@ def test_add_link() -> None:
     assert len(G.node("A").adj) == 1 and len(G.node("A").radj) == 0, (
         "Failed insertion should not modify the adjacency of the nodes"
     )
+
+
+def test_delete_link() -> None:
+
+    G = _make_graph()
+    a = G.node("A")
+    b = G.node("B")
+    bc = G.link("B_C")
+
+    G.delete_link("A_B")
+    assert G.link_count == 1 and "A_B" not in G.links, "Link 'A_B' should be removed"
+    assert G.node_count == 4, "Nodes should not be removed"
+    assert G.node("A") is a and G.node("B") is b and G.link("B_C") is bc, (
+        "Remaining elements should not be replaced"
+    )
+    assert len(a.adj) == 0 and len(b.radj) == 0, (
+        "Deleted link should be unregistered from the adjacency of its nodes"
+    )
+    assert list(b.adj) == ["C"] and b.adj["C"] is bc and G.node("C").radj["B"] is bc, (
+        "Adjacency of the other links should not be modified"
+    )
+
+    # Unknown ID, or link already deleted: no-op.
+    G.delete_link("Z")
+    G.delete_link("A_B")
+    assert G.link_count == 1 and G.node_count == 4, "Deleting an unknown link should not modify the graph"
+
+    # A link with the same ID and endpoints can be added again.
+    G.add_link("A_B", "A", "B", 15, {"CAR": {"time": 5}}, "CarLayer")
+    assert G.link("A_B").length == 15 and a.adj["B"] is G.link("A_B") and b.radj["A"] is G.link("A_B"), (
+        "Deleted link should be re-insertable"
+    )
+
+
+def test_delete_node() -> None:
+
+    # Additional links so that node 'B' has several entrance and exit links, plus a self-loop
+    # (which appears both in its entrance and exit links):
+    #
+    #           Self-link
+    #             on B
+    #        10    (*)    20
+    #   A --------> B <-------> C
+    #               |
+    #               +---------> D
+    G = _make_graph()
+    G.add_link("C_B", "C", "B", 30, {"CAR": {"time": 3}}, "CarLayer")
+    G.add_link("B_D", "B", "D", 40, {"CAR": {"time": 4}}, "CarLayer")
+    G.add_link("B_B", "B", "B", 5, {"CAR": {"time": 1}}, "CarLayer") # Self-link
+    a = G.node("A")
+    c = G.node("C")
+    d = G.node("D")
+
+    G.delete_node("B")
+    assert G.node_count == 3 and "B" not in G.nodes, "Node 'B' should be removed"
+    assert G.link_count == 0, "All the links from or to node 'B' should be removed"
+    assert G.node("A") is a and G.node("C") is c and G.node("D") is d, "Remaining nodes should not be replaced"
+    assert all(len(node.adj) == 0 and len(node.radj) == 0 for node in (a, c, d)), (
+        "Deleted links should be unregistered from the adjacency of the remaining nodes"
+    )
+
+    # Unknown ID, or node already deleted: no-op.
+    G.delete_node("Z")
+    G.delete_node("B")
+    assert G.node_count == 3, "Deleting an unknown node should not modify the graph"
+
+    # Isolated node.
+    G.add_link("A_C", "A", "C", 50, {"CAR": {"time": 5}}, "CarLayer")
+    G.delete_node("D")
+    assert G.node_count == 2 and "D" not in G.nodes, "Isolated node 'D' should be removed"
+    assert G.link_count == 1 and a.adj["C"] is G.link("A_C"), (
+        "Links not adjacent to the deleted node should not be modified"
+    )
+
+    # A node with the same ID can be added again, and linked.
+    G.add_node("B", 5, 5, "")
+    G.add_link("A_B", "A", "B", 60, {"CAR": {"time": 6}}, "CarLayer")
+    assert G.node("B").position == [5, 5] and G.node("B").radj["A"] is G.link("A_B"), (
+        "Deleted node should be re-insertable"
+    )
+
+
+@pytest.mark.parametrize("copy_func", [
+    OrientedGraph.copy,
+    copy.copy,
+    copy.deepcopy,
+], ids=["copy_method", "copy.copy", "copy.deepcopy"])
+def test_copy(copy_func: Callable[[OrientedGraph], OrientedGraph]) -> None:
+
+    G = _make_graph()
+    copyG = copy_func(G)
+    G.link("A_B").update_costs({"CAR": {"time": 42}})
+
+    # Since the graph owns its nodes and links, all copy methods are expected to be deep copies,
+    # thus both instances are expected to be independent.
+    assert G.link("A_B").costs != copyG.link("A_B").costs, \
+        "Cost of original and copy should be different on link 'A_B'"
+    assert G.link("B_C").costs == copyG.link("B_C").costs, \
+        "Cost of original and copy should be the same on link 'B_C'"
+    assert G.link("B_C") is not copyG.link("B_C"), "Links must be different objects"
 
 
 def test_get_links_without_cost() -> None:

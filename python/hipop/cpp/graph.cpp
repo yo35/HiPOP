@@ -168,7 +168,14 @@ static void bind_graph_element_container_view(nb::module_ &m, const char *name) 
 
 void graph(nb::module_ &m) {
 
-    nb::class_<hipop::Link>(m, "Link")
+    nb::class_<hipop::Link>(m, "Link",
+        "Oriented link between two nodes of an OrientedGraph.\n"
+        "\n"
+        "WARNING: a Link object is a non-owning reference to data stored\n"
+        "in the OrientedGraph it belongs to. The graph must be kept alive\n"
+        "for as long as the link is used, and the link must not be removed\n"
+        "from it. Otherwise, accessing the link results in undefined behavior\n"
+        "(likely a crash).")
         .def_ro("id", &hipop::Link::mid)
         .def_prop_ro("upstream", [](const hipop::Link &link) { return link.mup->mid; })
         .def_prop_ro("downstream", [](const hipop::Link &link) { return link.mdown->mid; })
@@ -177,7 +184,14 @@ void graph(nb::module_ &m) {
         .def_ro("length", &hipop::Link::mlength)
         .def("update_costs", &hipop::Link::updateCosts, "costs"_a);
 
-    nb::class_<hipop::Node>(m, "Node")
+    nb::class_<hipop::Node>(m, "Node",
+        "Node of an OrientedGraph.\n"
+        "\n"
+        "WARNING: a Node object is a non-owning reference to data stored\n"
+        "in the OrientedGraph it belongs to. The graph must be kept alive\n"
+        "for as long as the node is used, and the node must not be removed\n"
+        "from it. Otherwise, accessing the node results in undefined behavior\n"
+        "(likely a crash).")
         .def_ro("id", &hipop::Node::mid)
         .def_ro("position", &hipop::Node::mposition)
         .def_ro("adj", &hipop::Node::madj)
@@ -217,13 +231,24 @@ void graph(nb::module_ &m) {
         }, nb::keep_alive<0, 1>())
 
         // Other operations
+        .def("copy", [](const hipop::OrientedGraph &graph) {
+            return hipop::OrientedGraph(graph);
+        })
+        .def("__copy__", [](const hipop::OrientedGraph &graph) {
+            return hipop::OrientedGraph(graph);
+        })
+        .def("__deepcopy__", [](const hipop::OrientedGraph &graph, const nb::typed<nb::dict, int, nb::any> &) {
+            // The graph owns its nodes and links (it is not a container of shared references to them),
+            // so copying the graph always copies them: thus, __copy__ and __deepcopy__ behave identically.
+            return hipop::OrientedGraph(graph);
+        }, "memo"_a)
         .def("add_all_nodes_and_links", &hipop::OrientedGraph::AddAllNodesAndLinks, "graph"_a)
         .def("add_node", &hipop::OrientedGraph::AddNode,
             "node_id"_a, "x"_a, "y"_a, "label"_a, "exclude_movements"_a = mapsets())
         .def("add_link", &hipop::OrientedGraph::AddLink,
             "link_id"_a, "up"_a, "down"_a, "length"_a, "costs"_a, "label"_a = "_def")
+        .def("delete_node", &hipop::OrientedGraph::DeleteNode, "node_id"_a)
         .def("delete_link", &hipop::OrientedGraph::DeleteLink, "link_id"_a)
-        .def("delete_all_links_to_node", &hipop::OrientedGraph::DeleteAllLinksToNode, "node_id"_a)
         .def("update_link_costs", &hipop::OrientedGraph::UpdateLinkCosts, "link_id"_a, "costs"_a)
         .def("update_costs", &hipop::OrientedGraph::UpdateCosts, "link_id_to_costs"_a)
         .def("get_length", &hipop::OrientedGraph::getLength, "up"_a, "down"_a)
@@ -293,10 +318,6 @@ void graph(nb::module_ &m) {
     m.def("make_path", &hipop::makePath, "graph"_a, "link_ids"_a);
 
     m.def("merge_oriented_graph", &hipop::mergeOrientedGraph, "graphs"_a);
-
-    m.def("copy_graph", [](const hipop::OrientedGraph &graph) {
-        return hipop::OrientedGraph(graph);
-    }, "graph"_a);
 }
 
 }

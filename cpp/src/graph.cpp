@@ -2,6 +2,7 @@
 
 #include <hipop/string_util.h>
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -28,8 +29,7 @@ namespace hipop
 
 
     void OrientedGraph::AddAllNodesAndLinks(const OrientedGraph &graph) {
-        for (const auto &it : graph.nodes_) {
-            const Node *otherNode = &it.second;
+        for (const Node *otherNode : graph.nodes()) {
             AddNode(
                 otherNode->mid,
                 otherNode->mposition[0],
@@ -38,8 +38,7 @@ namespace hipop
                 otherNode->mexclude_movements
             );
         }
-        for (const auto &it : graph.links_) {
-            const Link *otherLink = &it.second;
+        for (const Link *otherLink : graph.links()) {
             AddLink(
                 otherLink->mid,
                 otherLink->mup->mid,
@@ -94,44 +93,63 @@ namespace hipop
     }
 
 
-    /**
-     * @brief Delete a link from the OrientedGraph
-     */
+    void OrientedGraph::DeleteNode(const std::string &nodeId) {
+
+        auto it = nodes_.find(nodeId);
+        if (it == nodes_.end()) {
+            return;
+        }
+
+        Node *node = &it->second;
+
+        // Remove the entrance links.
+        // WARNING: do not remove links while iterating on the adjacency map
+        // (because link deletion would invalidate the iterators on this map).
+        std::vector<Link *> linksToRemove;
+        linksToRemove.reserve(std::max(node->madj.size(), node->mradj.size()));
+        for (const auto &linkIt : node->madj) {
+            linksToRemove.emplace_back(linkIt.second);
+        }
+        for (Link *link : linksToRemove) {
+            DeleteLink(link->mid);
+        }
+
+        // Same thing for the exit links.
+        linksToRemove.clear();
+        for (const auto &linkIt : node->mradj) {
+            linksToRemove.emplace_back(linkIt.second);
+        }
+        for (Link *link : linksToRemove) {
+            DeleteLink(link->mid);
+        }
+
+        // Remove the node itself at the end.
+        nodes_.erase(it);
+    }
+
+
     void OrientedGraph::DeleteLink(const std::string &linkId) {
 
-        if (links_.find(linkId) != links_.end())
-        {
-            Link* pLink = &links_.at(linkId);
-
-            if (nodes_.find(pLink->mup->mid) != nodes_.end())
-            {
-                Node* pUp = &nodes_.at(pLink->mup->mid);
-                pUp->madj.erase(pLink->mdown->mid);
-            }
-
-            if (nodes_.find(pLink->mdown->mid) != nodes_.end())
-            {
-                Node* pDown = &nodes_.at(pLink->mdown->mid);
-                pDown->mradj.erase(pLink->mup->mid);
-            }
-
-            links_.erase(linkId);
-        }
-    };
-
-    /**
-     * @brief Delete all links to a specific node
-     */
-    void OrientedGraph::DeleteAllLinksToNode(const std::string &nodeId) {
-
-        if (nodes_.find(nodeId) != nodes_.end())
-        {
-            for (const auto &it : nodes_.at(nodeId).madj) {
-                DeleteLink(it.second->mid);
-            }
+        auto it = links_.find(linkId);
+        if (it == links_.end()) {
+            return;
         }
 
-    };
+        Link *link = &it->second;
+
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+        // Casting away const is safe here: the nodes are owned by this graph, which is itself
+        // non-const in this method, so the nodes are not actually const objects.
+        Node *up = const_cast<Node *>(link->mup);
+        Node *down = const_cast<Node *>(link->mdown);
+        // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
+
+        // Remove the references to the link in its adjacent nodes, and the link itself at the end.
+        up->madj.erase(down->mid);
+        down->mradj.erase(up->mid);
+        links_.erase(it);
+    }
+
 
     /**
      * @brief Update a Link costs
@@ -155,23 +173,15 @@ namespace hipop
         }
     }
 
-    /**
-     * @brief Print the Nodes informations
-     *
-     */
-    void OrientedGraph::ShowNodes() {
-        for(const auto &elem: nodes_) {
-            std::cout << "Node(" << elem.first << ", [" << elem.second.mposition[0] << ",\t" << elem.second.mposition[1] << "])\n";
+    void OrientedGraph::ShowNodes() const {
+        for (const Node *node : nodes()) {
+            std::cout << "Node(" << node->mid << ", [" << node->mposition[0] << ",\t" << node->mposition[1] << "])\n";
         }
     }
 
-    /**
-     * @brief Print the Link informations
-     *
-     */
-    void OrientedGraph::ShowLinks() {
-        for(const auto &elem: links_) {
-            std::cout << "Link(" << elem.first << ", " << elem.second.mup->mid << ", " << elem.second.mdown->mid << ")\n";
+    void OrientedGraph::ShowLinks() const {
+        for (const Link *link : links()) {
+            std::cout << "Link(" << link->mid << ", " << link->mup->mid << ", " << link->mdown->mid << ")\n";
         }
     }
 
